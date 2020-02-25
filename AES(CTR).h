@@ -11,7 +11,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define xtime(x) ((x << 1) ^ (((x >> 7) & 1) * 0x1b))
 #define Nb 4 //Number of colmns
-#define Nk 4 //Number of 32-bit words comprising the Cipher Key
+#define Nk 4 //Number of 32-bit words comprising the Cipher Key //happy
 
 #if Nk == 4
 #define AES_MAXNR 10 //10 round
