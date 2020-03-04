@@ -31,6 +31,7 @@ typedef struct aes_key_st
     int rounds;
 } AES_KEY;
 
+void reset_count(unsigned char *count);
 int AES_set_encrypt_key(unsigned char *userKey,int bits, AES_KEY *key);
 void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key);
 void Count_Addition(unsigned char *count);
@@ -39,6 +40,11 @@ void SubByte(unsigned char *state);
 void ShiftRow(unsigned char *state);
 void MixColumns(unsigned char *state);
 void AddRoundKey(unsigned char *state,AES_KEY *key, int *round);
+
+//!FACE - Optimize
+void Make_LUTRd1(unsigned char LUT[][256],unsigned char LUT_plus[12],unsigned char *userkey,unsigned char *count);
+void AES_encrypt_FACE(unsigned char *in,unsigned char LUT[][256],unsigned char LUT_plus[12], unsigned char *out, AES_KEY *key);
+void CRYPTO_ctr128_encrypt_FACE(unsigned char *in, unsigned char *out, unsigned char LUT[][256],unsigned char LUT_plus[12],size_t len, void *masterkey, unsigned char *count);
 
 unsigned long long cpucycles();
 

@@ -2,10 +2,12 @@
 
 AES_KEY KEY;
 AES_KEY *key = &KEY;
-unsigned char in[BLOCKSIZE * 16] = {0x00,};
-unsigned char userkey[16] = {0x00,0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+unsigned char in[BLOCKSIZE * 16] = {0x00};
+unsigned char userkey[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 unsigned char out[BLOCKSIZE * 16] = {0x00};
 unsigned char count[16] = {0x00};
+unsigned char LUT_Rd1[4][256] = {0x00};
+unsigned char LUT_Rd1_plus[12] = {0x00};
 
 //happy
 
@@ -14,30 +16,52 @@ unsigned char count[16] = {0x00};
 int main()
 {
     int cnt_i;
-    printf("\nPlain Txt   : ");
-    for (cnt_i = 0; cnt_i < 32; cnt_i++)
+    printf("\nPlain Txt\n");
+    for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
     {
+        if((cnt_i %4 ==0)&& (cnt_i !=0))
+            printf(".");
+        if((cnt_i %16 ==0)&& (cnt_i !=0))
+            printf("\n");
+
         printf("%02x ", in[cnt_i]);
     }
 
-    printf("\nKEY         : ");
+    printf("\n\nKEY:");
     for (cnt_i = 0; cnt_i < 16; cnt_i++)
     {
         printf("%02x ", userkey[cnt_i]);
     }
 
     //! Encrypt
-    CRYPTO_ctr128_encrypt(in, out, 32, userkey, count);
+    CRYPTO_ctr128_encrypt(in, out, BLOCKSIZE * 16, userkey, count);
 
-    printf("\nEncrypt txt : ");
-    for (cnt_i = 0; cnt_i < 32; cnt_i++)
+
+    printf("\n\nEncrypt txt\n");
+    for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
     {
+        if((cnt_i %4 ==0)&& (cnt_i !=0))
+            printf(".");
+        if((cnt_i %16 ==0)&& (cnt_i !=0))
+            printf("\n");
+        printf("%02x ", out[cnt_i]);
+    }
+
+    Make_LUTRd1(LUT_Rd1,LUT_Rd1_plus, userkey,count);
+    CRYPTO_ctr128_encrypt_FACE(in, out,LUT_Rd1,LUT_Rd1_plus,BLOCKSIZE * 16, userkey, count);
+
+    printf("\n\nEncrypt txt\n");
+    for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
+    {
+        if((cnt_i %4 ==0)&& (cnt_i !=0))
+            printf(".");
+        if((cnt_i %16 ==0)&& (cnt_i !=0))
+            printf("\n");
         printf("%02x ", out[cnt_i]);
     }
     return 0;
 }
 #endif
-
 
 //!성능테스트
 #if 0
@@ -48,24 +72,34 @@ int main()
     unsigned long long totalcycles2 = 0;
     int cnt_i = 0;
 
-    for(cnt_i = 0 ; cnt_i < 10000; cnt_i++)
+    for (cnt_i = 0; cnt_i < 10000; cnt_i++)
     {
 
-    //! Encrypt
-    cycles1 = cpucycles();
-    CRYPTO_ctr128_encrypt(in, out, 32, userkey, count);
-    cycles2 = cpucycles();
+        //! Encrypt
+        cycles1 = cpucycles();
+        CRYPTO_ctr128_encrypt(in, out, 32, userkey, count);
+        cycles2 = cpucycles();
 
-    totalcycles1 += cycles2 - cycles1;
+        totalcycles1 += cycles2 - cycles1;
     }
-    printf("cpu cycles of AES(CTR) 32 ENC %10lld\n",totalcycles1/10000); 
-    //! gcc -O2 1434
-    //? gcc 7844
-   
+    printf("cpu cycles of AES(CTR) ENC %10lld\n", totalcycles1 / 10000);
+
+    totalcycles1 = 0x00;
+    for (cnt_i = 0; cnt_i < 10000; cnt_i++)
+    {
+        //! Encrypt
+        Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
+        cycles1 = cpucycles();
+        CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd1, LUT_Rd1_plus, BLOCKSIZE * 16, userkey, count);
+        cycles2 = cpucycles();
+
+        totalcycles1 += cycles2 - cycles1;
+    }
+    printf("cpu cycles of AES_FACE ENC %10lld\n", totalcycles1 / 10000);
+
     return 0;
 }
 #endif
-
 
 //! 파일 입출력 KAT
 #if 0

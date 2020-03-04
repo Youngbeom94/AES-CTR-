@@ -38,6 +38,20 @@ static const unsigned char rsbox[256] = {
     0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
     0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d};
 
+unsigned long long cpucycles()
+{
+    return __rdtsc();
+}
+void reset_count(unsigned char *count)
+{
+    int cnt_i = 0;
+
+    for (cnt_i = 12; cnt_i < 16; cnt_i++)
+    {
+        count[cnt_i] = 0x00;
+    }
+}
+
 void SubByte(unsigned char *state)
 {
     int cnt_i;
@@ -70,12 +84,8 @@ void ShiftRow(unsigned char *state)
 }
 void MixColumns(unsigned char *state)
 {
-    unsigned char temp[2] = {
-        0x00,
-    },
-                  src[4] = {
-                      0x00,
-                  };
+    unsigned char temp[2];
+    unsigned char src[4];
     for (int cnt_i = 0; cnt_i < 4; cnt_i++)
     {
         //? 02 03 01 01
@@ -194,7 +204,15 @@ void AddRoundKey(unsigned char *state, AES_KEY *key, int *round)
             state[cnt_j + (cnt_i * 4)] ^= temp;
         }
     }
-
+    // if(*round == 1)
+    // {
+    //     printf("\n");
+    //     for(cnt_i = 0 ; cnt_i < 16 ; cnt_i ++)
+    //     {
+    //     printf("%02x ",state[cnt_i]);
+    //     }
+    //     printf("\n");
+    // }
     *round += 1;
 }
 
@@ -210,7 +228,7 @@ void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
     }
 
     AddRoundKey(state, key, &round);
-    
+
     for (cnt_i = 1; cnt_i < AES_MAXNR; cnt_i++)
     {
         SubByte(state);
@@ -317,7 +335,171 @@ void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, vo
     }
 }
 
-unsigned long long cpucycles()
+void Make_LUTRd1(unsigned char LUT[][256], unsigned char LUT_plus[12], unsigned char *userkey, unsigned char *count)
 {
-    return __rdtsc();
+
+    unsigned char Rd0Table[12] = {0x00};
+    unsigned char state[16] = {0x00};
+    unsigned char round = 0x00;
+    int rd_AES = 1;
+    int cnt_i, cnt_j = 0;
+    AES_KEY Key;
+    AES_KEY *key = &Key;
+    key->rounds = AES_set_encrypt_key(userkey, 128, key);
+    reset_count(count);
+
+    for (cnt_i = 0; cnt_i < 3; cnt_i++)
+    { // 키는 int 배열 4개이고 state는 byte배열 16개 이므로 XoR시 쪼개고 합치는 과정이 필요
+        for (cnt_j = 0; cnt_j < 4; cnt_j++)
+        {
+            Rd0Table[cnt_j + (cnt_i * 4)] = count[cnt_j + (cnt_i * 4)] ^ userkey[cnt_j + (cnt_i * 4)];
+            state[cnt_j + (cnt_i * 4)] = Rd0Table[cnt_j + (cnt_i * 4)];
+        }
+    }
+
+    for (cnt_i = 0; cnt_i < 256; cnt_i++)
+    {
+        for (cnt_j = 0; cnt_j < 12; cnt_j++)
+        {
+            state[cnt_j] = Rd0Table[cnt_j];
+        }
+        state[12] = userkey[12];
+        state[13] = userkey[13];
+        state[14] = userkey[14];
+        state[15] = round ^ userkey[15];
+
+        rd_AES = 1;
+        SubByte(state);
+        ShiftRow(state);
+        MixColumns(state);
+        AddRoundKey(state, key, &rd_AES);
+
+        for (cnt_j = 0; cnt_j < 4; cnt_j++)
+        {
+            LUT[cnt_j][cnt_i] = state[cnt_j];
+        }
+        round++;
+    }
+    for (cnt_i = 0; cnt_i < 12; cnt_i++)
+    {
+        LUT_plus[cnt_i + 4] = state[cnt_i + 4];
+    }
+
+    // printf("\nRd1Table\n");
+    // for (cnt_i = 0; cnt_i < 4; cnt_i++)
+    // {
+    //     if ((cnt_i % 4 == 0) && (cnt_i != 0))
+    //         printf(".");
+    //     if ((cnt_i % 16 == 0) && (cnt_i != 0))
+    //         printf("\n");
+
+    //     printf("%02x ", LUT[cnt_i][0]);
+    // }
+    // printf("\nRd1Table\n");
+    // for (cnt_i = 0; cnt_i < 4; cnt_i++)
+    // {
+    //     if ((cnt_i % 4 == 0) && (cnt_i != 0))
+    //         printf(".");
+    //     if ((cnt_i % 16 == 0) && (cnt_i != 0))
+    //         printf("\n");
+
+    //     printf("%02x ", LUT[cnt_i][1]);
+    // }
+}
+void AES_encrypt_FACE(unsigned char *in, unsigned char LUT[][256], unsigned char LUT_plus[12], unsigned char *out, AES_KEY *key)
+{
+    unsigned char state[4 * Nb];
+    int cnt_i;
+    int round = 2;
+
+    for (cnt_i = 0; cnt_i < 4; cnt_i++)
+    {
+        state[cnt_i] = LUT[cnt_i][in[15]];
+    }
+    for (cnt_i = 0; cnt_i < 12; cnt_i++)
+    {
+        state[cnt_i + 4] = LUT_plus[cnt_i + 4];
+    }
+
+    for (cnt_i = 2; cnt_i < AES_MAXNR; cnt_i++)
+    {
+        SubByte(state);
+        ShiftRow(state);
+        MixColumns(state);
+        AddRoundKey(state, key, &round);
+    }
+
+    SubByte(state);
+    ShiftRow(state);
+    AddRoundKey(state, key, &round);
+
+    for (cnt_i = 0; cnt_i < 4 * Nb; cnt_i++)
+    {
+        out[cnt_i] = state[cnt_i];
+    }
+}
+
+void CRYPTO_ctr128_encrypt_FACE(unsigned char *in, unsigned char *out, unsigned char LUT[][256], unsigned char LUT_plus[12], size_t len, void *masterkey, unsigned char *count)
+{
+    int cnt_i, cnt_j;
+    int paddingcnt = len % 16;
+    unsigned char PT[BLOCKSIZE][16] = {0x00};
+    unsigned char CT[BLOCKSIZE][16] = {0x00};
+    unsigned char iparray[16];
+    unsigned char oparray[16];
+    AES_KEY USER_KEY;
+    AES_KEY *key = &USER_KEY;
+
+    key->rounds = AES_set_encrypt_key(masterkey, AES_KEY_BIT, key); //!
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE - 1; cnt_i++)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            PT[cnt_i][cnt_j] = in[cnt_i * 16 + cnt_j];
+        }
+    }
+    if (paddingcnt == 0)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
+        }
+    }
+
+    if (paddingcnt != 0) // 패딩 함수.
+    {
+        for (cnt_j = 0; cnt_j < paddingcnt; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
+        }
+        for (cnt_j = paddingcnt; cnt_j < 16; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = (0x10 - paddingcnt);
+        }
+    }
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++) //각각의 count마다 1더하기 해주고, 암호화 시킨다음에 PT와 XoR 해준다. CORE
+    {
+        if (cnt_i != 0)
+            Count_Addition(count);
+
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            iparray[cnt_j] = count[cnt_j];
+        }
+        AES_encrypt_FACE(iparray, LUT, LUT_plus, oparray, key);
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            CT[cnt_i][cnt_j] = oparray[cnt_j] ^ PT[cnt_i][cnt_j];
+        }
+    }
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            out[cnt_i * 16 + cnt_j] = CT[cnt_i][cnt_j];
+        }
+    }
 }
