@@ -2,23 +2,18 @@
 
 AES_KEY KEY;
 AES_KEY *key = &KEY;
-const unsigned char *in;
-const unsigned char *userkey;
-unsigned char plaintxt[32] = {0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x7, 0x34, 0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x7, 0x34};
-unsigned char UserKey[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
-unsigned char out[32] = {0x00};
+unsigned char in[BLOCKSIZE * 16] = {0x00,};
+unsigned char userkey[16] = {0x00,0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+unsigned char out[BLOCKSIZE * 16] = {0x00};
 unsigned char count[16] = {0x00};
 
 //happy
 
 //! CTR TEST
-#if 0
+#if 1
 int main()
 {
     int cnt_i;
-
-    in = plaintxt;
-    userkey = UserKey;
     printf("\nPlain Txt   : ");
     for (cnt_i = 0; cnt_i < 32; cnt_i++)
     {
@@ -45,18 +40,13 @@ int main()
 
 
 //!성능테스트
-#if 1
+#if 0
 int main()
 {
     unsigned long long cycles1, cycles2, cycles3, cycles4;
     unsigned long long totalcycles1 = 0;
     unsigned long long totalcycles2 = 0;
     int cnt_i = 0;
-    in = plaintxt;
-    userkey = UserKey;
-
-    // key->rounds = AES_set_encrypt_key(UserKey, AES_KEY_BIT, key);
-
 
     for(cnt_i = 0 ; cnt_i < 10000; cnt_i++)
     {
@@ -68,7 +58,9 @@ int main()
 
     totalcycles1 += cycles2 - cycles1;
     }
-    printf("cpu cycles of AES 32 ENC %10lld\n",totalcycles1/10000);
+    printf("cpu cycles of AES(CTR) 32 ENC %10lld\n",totalcycles1/10000); 
+    //! gcc -O2 1434
+    //? gcc 7844
    
     return 0;
 }
@@ -188,9 +180,7 @@ int main()
         }
 
         // !Encrypt
-        in = testpt;
-        userkey = testkey;
-        CRYPTO_ctr128_encrypt(in, out, 16, userkey, count);
+        CRYPTO_ctr128_encrypt(testpt, out, 16, testkey, count);
 
         fprintf(ofp, "\nCT = ");// 출력시킬 파일에 Write 해주는 함수 CT값 Write
         for (cnt_i = 0; cnt_i < 16; cnt_i++)
@@ -344,7 +334,7 @@ int main()
     int cnt_i, cnt_j, cnt_k = 0;
     FILE *ifp, *ofp;
     ifp = fopen("AES128(CTR)MCT.req", "r"); // Read할 파일 개방
-    ofp = fopen("AES128(CTR)MCT.rsp", "w"); //Write할 파일 개방
+    ofp = fopen("test.rsp", "w"); //Write할 파일 개방
     if (ifp == NULL)
     {
         printf("ERROR_Not_opened"); // NULL 반환시 오류값 생성

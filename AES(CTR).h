@@ -12,6 +12,7 @@
 #define xtime(x) ((x << 1) ^ (((x >> 7) & 1) * 0x1b))
 #define Nb 4 //Number of colmns
 #define Nk 4 //Number of 32-bit words comprising the Cipher Key //happy
+#define BLOCKSIZE 2
 
 #if Nk == 4
 #define AES_MAXNR 10 //10 round
@@ -30,14 +31,14 @@ typedef struct aes_key_st
     int rounds;
 } AES_KEY;
 
-int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY *key);
-void AES_encrypt(const unsigned char *in, unsigned char *out, const AES_KEY *key);
+int AES_set_encrypt_key(unsigned char *userKey,int bits, AES_KEY *key);
+void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key);
 void Count_Addition(unsigned char *count);
-void CRYPTO_ctr128_encrypt(const unsigned char *in, unsigned char *out, size_t len, const void *masterkey, unsigned char *count);
+void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, void *masterkey, unsigned char *count);
 void SubByte(unsigned char *state);
 void ShiftRow(unsigned char *state);
 void MixColumns(unsigned char *state);
-void AddRoundKey(unsigned char *state, const AES_KEY *key, int *round);
+void AddRoundKey(unsigned char *state,AES_KEY *key, int *round);
 
 unsigned long long cpucycles();
 

@@ -70,10 +70,12 @@ void ShiftRow(unsigned char *state)
 }
 void MixColumns(unsigned char *state)
 {
-    unsigned char *temp;
-    temp = (unsigned char *)calloc(2, sizeof(unsigned char)); // 행렬곱셈에 이용할 값들 저장시키는 변수
-    unsigned char *src;
-    src = (unsigned char *)calloc(4, sizeof(unsigned char)); // 4개의 state 배열의 최종상태 저장시키는 변수
+    unsigned char temp[2] = {
+        0x00,
+    },
+                  src[4] = {
+                      0x00,
+                  };
     for (int cnt_i = 0; cnt_i < 4; cnt_i++)
     {
         //? 02 03 01 01
@@ -102,8 +104,6 @@ void MixColumns(unsigned char *state)
             state[4 * cnt_i + cnt_j] = src[cnt_j];
         }
     }
-    free(temp);
-    free(src);
 }
 void RotWord(int *Word) // int 기준으로 값을 받고 1byte left Rotation
 {
@@ -131,7 +131,7 @@ void SubWord(int *Word) // int 기준으로 값을 받고 int를 4개의 byte로
     }
 }
 
-void Byte_Int_Set(const unsigned char *userKey, AES_KEY *key, int start) // byte 16개 배열을 int함수에 저장시키는 함수
+void Byte_Int_Set(unsigned char *userKey, AES_KEY *key, int start) // byte 16개 배열을 int함수에 저장시키는 함수
 {
     int temp = 0;
     for (int cnt_i = 0; cnt_i < 4; cnt_i++) // 저장할 공간을 먼저 초기화 시키기
@@ -149,7 +149,7 @@ void Byte_Int_Set(const unsigned char *userKey, AES_KEY *key, int start) // byte
         }
     }
 }
-int AES_set_encrypt_key(const unsigned char *userkey, const int bits, AES_KEY *key) //키생성 함수
+int AES_set_encrypt_key(unsigned char *userkey, int bits, AES_KEY *key) //키생성 함수
 {
     int cnt_i;
     int temp;
@@ -180,7 +180,7 @@ int AES_set_encrypt_key(const unsigned char *userkey, const int bits, AES_KEY *k
     return -1;
 }
 
-void AddRoundKey(unsigned char *state, const AES_KEY *key, int *round)
+void AddRoundKey(unsigned char *state, AES_KEY *key, int *round)
 {
     int cnt_i, cnt_j = 0;
     int temp;
@@ -198,7 +198,7 @@ void AddRoundKey(unsigned char *state, const AES_KEY *key, int *round)
     *round += 1;
 }
 
-void AES_encrypt(const unsigned char *in, unsigned char *out, const AES_KEY *key)
+void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
 {
     unsigned char state[4 * Nb];
     int cnt_i;
@@ -210,7 +210,7 @@ void AES_encrypt(const unsigned char *in, unsigned char *out, const AES_KEY *key
     }
 
     AddRoundKey(state, key, &round);
-
+    
     for (cnt_i = 1; cnt_i < AES_MAXNR; cnt_i++)
     {
         SubByte(state);
@@ -230,128 +230,91 @@ void AES_encrypt(const unsigned char *in, unsigned char *out, const AES_KEY *key
 }
 void Count_Addition(unsigned char *count) //Count 배열에서 값을 1증가시키는 함수
 {
-    int cnt_i,carry = 0; //맨처음 Carry 값은 0
-    unsigned char *out; // 최종배열
-    out = (unsigned char*)calloc(16,sizeof(unsigned char));
-    unsigned char *one;// 0x01을 의미하는 배열
-    one = (unsigned char*)calloc(16,sizeof(unsigned char));
+    int cnt_i, carry = 0;           //맨처음 Carry 값은 0
+    unsigned char out[16] = {0x00}; // 최종배열
+    unsigned char one[16] = {0x00}; // 0x01을 의미하는 배열
     one[15] = 0x01;
 
-    for(cnt_i = 15 ; cnt_i >=0 ; cnt_i--)
+    for (cnt_i = 15; cnt_i >= 0; cnt_i--)
     {
         out[cnt_i] = count[cnt_i] + one[cnt_i] + carry; // 마지막 배열 끼리 순차적으로 더해주면서 carry를 계산한다.
         //만약 out의 결과값의 count값보다 작은 경우 carry가 발생했다. 만약 0xffffffff..인 경우 1을 더해주면 자동적으로 0x00상태로 돌아간다
-        if(out[cnt_i] < count[cnt_i]) 
+        if (out[cnt_i] < count[cnt_i])
             carry = 1;
         else
         {
             carry = 0;
         }
     }
-    for(cnt_i = 0 ; cnt_i <16 ; cnt_i ++)
+    for (cnt_i = 0; cnt_i < 16; cnt_i++)
     {
         count[cnt_i] = out[cnt_i];
     }
-    free(out);
-    free(one);
 }
 
-void CRYPTO_ctr128_encrypt(const unsigned char *in, unsigned char *out, size_t len, const void *masterkey, unsigned char *count)
+void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, void *masterkey, unsigned char *count)
 {
     int cnt_i, cnt_j;
     int paddingcnt = len % 16;
-    int blockcnt;
-    if (paddingcnt == 0)
-        blockcnt = len / 16;
-    if (paddingcnt != 0)
-        blockcnt = len / 16 + 1;
+    unsigned char PT[BLOCKSIZE][16] = {0x00};
+    unsigned char CT[BLOCKSIZE][16] = {0x00};
+    unsigned char iparray[16];
+    unsigned char oparray[16];
     AES_KEY USER_KEY;
     AES_KEY *key = &USER_KEY;
 
     key->rounds = AES_set_encrypt_key(masterkey, AES_KEY_BIT, key); //!
 
-    unsigned char **PT;
-    PT = (unsigned char **)calloc(blockcnt, sizeof(unsigned char *));
-    for (cnt_i = 0; cnt_i < blockcnt; cnt_i++)
-    {
-        PT[cnt_i] = (unsigned char *)calloc(16, sizeof(unsigned char *));
-    }
-
-    unsigned char **CT;
-    CT = (unsigned char **)calloc(blockcnt, sizeof(unsigned char *));
-    for (cnt_i = 0; cnt_i < blockcnt; cnt_i++)
-    {
-        CT[cnt_i] = (unsigned char *)calloc(16, sizeof(unsigned char *));
-    }
-
-    for (cnt_i = 0; cnt_i < blockcnt - 1; cnt_i++)
+    for (cnt_i = 0; cnt_i < BLOCKSIZE - 1; cnt_i++)
     {
         for (cnt_j = 0; cnt_j < 16; cnt_j++)
         {
-            PT[cnt_i][cnt_j] = in[cnt_i * 16 + cnt_j]; 
+            PT[cnt_i][cnt_j] = in[cnt_i * 16 + cnt_j];
         }
     }
     if (paddingcnt == 0)
     {
         for (cnt_j = 0; cnt_j < 16; cnt_j++)
         {
-            PT[blockcnt - 1][cnt_j] = in[(blockcnt - 1) * 16 + cnt_j];
+            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
         }
     }
 
-    if (paddingcnt != 0)// 패딩 함수.
+    if (paddingcnt != 0) // 패딩 함수.
     {
         for (cnt_j = 0; cnt_j < paddingcnt; cnt_j++)
         {
-            PT[blockcnt - 1][cnt_j] = in[(blockcnt - 1) * 16 + cnt_j]; 
+            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
         }
         for (cnt_j = paddingcnt; cnt_j < 16; cnt_j++)
         {
-            PT[blockcnt - 1][cnt_j] = (0x10 - paddingcnt); 
+            PT[BLOCKSIZE - 1][cnt_j] = (0x10 - paddingcnt);
         }
     }
 
-    const unsigned char *pt;
-    unsigned char *iparray;
-    iparray = (unsigned char *)calloc(16, sizeof(unsigned char));
-    unsigned char *oparray;
-    oparray = (unsigned char *)calloc(16, sizeof(unsigned char));
-
-    for (cnt_i = 0; cnt_i < blockcnt; cnt_i++) //각각의 count마다 1더하기 해주고, 암호화 시킨다음에 PT와 XoR 해준다. CORE
+    for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++) //각각의 count마다 1더하기 해주고, 암호화 시킨다음에 PT와 XoR 해준다. CORE
     {
-        if(cnt_i != 0)
+        if (cnt_i != 0)
             Count_Addition(count);
 
         for (cnt_j = 0; cnt_j < 16; cnt_j++)
         {
             iparray[cnt_j] = count[cnt_j];
         }
-        pt = iparray;
-        AES_encrypt(pt, oparray, key);
+        AES_encrypt(iparray, oparray, key);
         for (cnt_j = 0; cnt_j < 16; cnt_j++)
         {
-            CT[cnt_i][cnt_j] = oparray[cnt_j] ^  PT[cnt_i][cnt_j];
+            CT[cnt_i][cnt_j] = oparray[cnt_j] ^ PT[cnt_i][cnt_j];
         }
     }
 
-    for (cnt_i = 0; cnt_i < blockcnt; cnt_i++)
+    for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++)
     {
         for (cnt_j = 0; cnt_j < 16; cnt_j++)
         {
             out[cnt_i * 16 + cnt_j] = CT[cnt_i][cnt_j];
         }
     }
-
-    for (cnt_i = 0; cnt_i < blockcnt; cnt_i++)
-    {
-        free(PT[cnt_i]);
-        free(CT[cnt_i]);
-    }
-    free(iparray);
-    free(oparray);
-    free(PT);
-    free(CT);
-    
 }
 
 unsigned long long cpucycles()
