@@ -12,7 +12,7 @@
 #define xtime(x) ((x << 1) ^ (((x >> 7) & 1) * 0x1b))
 #define Nb 4 //Number of colmns
 #define Nk 4 //Number of 32-bit words comprising the Cipher Key //happy
-#define BLOCKSIZE 2
+#define BLOCKSIZE 255
 
 #if Nk == 4
 #define AES_MAXNR 10 //10 round
