@@ -8,20 +8,17 @@ unsigned char out[BLOCKSIZE * 16] = {0x00};
 unsigned char count[16] = {0x00};
 unsigned char LUT_Rd1[4][256] = {0x00};
 unsigned char LUT_Rd1_plus[12] = {0x00};
-
-//happy
+unsigned char LUT_Rd2_plus[4][4][256] = {0x00};
 
 //! CTR TEST
-#if 0
+#if 1
 int main()
 {
     int cnt_i;
     printf("\nPlain Txt\n");
     for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
     {
-        if((cnt_i %4 ==0)&& (cnt_i !=0))
-            printf(".");
-        if((cnt_i %16 ==0)&& (cnt_i !=0))
+        if ((cnt_i % 16 == 0) && (cnt_i != 0))
             printf("\n");
 
         printf("%02x ", in[cnt_i]);
@@ -35,27 +32,23 @@ int main()
 
     //! Encrypt
     CRYPTO_ctr128_encrypt(in, out, BLOCKSIZE * 16, userkey, count);
-
-
     printf("\n\nEncrypt txt\n");
     for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
     {
-        if((cnt_i %4 ==0)&& (cnt_i !=0))
-            printf(".");
-        if((cnt_i %16 ==0)&& (cnt_i !=0))
+        if ((cnt_i % 16 == 0) && (cnt_i != 0))
             printf("\n");
         printf("%02x ", out[cnt_i]);
     }
 
-    Make_LUTRd1(LUT_Rd1,LUT_Rd1_plus, userkey,count);
-    CRYPTO_ctr128_encrypt_FACE(in, out,LUT_Rd1,LUT_Rd1_plus,BLOCKSIZE * 16, userkey, count);
+    //! Encrypt of FACE
+    Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
+    Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count);
+    CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
 
     printf("\n\nEncrypt txt\n");
     for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
     {
-        if((cnt_i %4 ==0)&& (cnt_i !=0))
-            printf(".");
-        if((cnt_i %16 ==0)&& (cnt_i !=0))
+        if ((cnt_i % 16 == 0) && (cnt_i != 0))
             printf("\n");
         printf("%02x ", out[cnt_i]);
     }
@@ -64,14 +57,14 @@ int main()
 #endif
 
 //!성능테스트
-#if 1
+#if 0
 int main()
 {
     unsigned long long cycles1, cycles2, cycles3, cycles4;
     unsigned long long totalcycles1 = 0;
     unsigned long long totalcycles2 = 0;
     int cnt_i = 0;
-    int time = 1; 
+    int time = 1;
 
     for (cnt_i = 0; cnt_i < time; cnt_i++)
     {
@@ -90,8 +83,10 @@ int main()
     {
         //! Encrypt
         Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
+        Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count);
         cycles1 = cpucycles();
-        CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd1, LUT_Rd1_plus, BLOCKSIZE * 16, userkey, count);
+        CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
+
         cycles2 = cpucycles();
 
         totalcycles1 += cycles2 - cycles1;

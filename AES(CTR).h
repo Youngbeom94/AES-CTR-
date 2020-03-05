@@ -12,7 +12,7 @@
 #define xtime(x) ((x << 1) ^ (((x >> 7) & 1) * 0x1b))
 #define Nb 4 //Number of colmns
 #define Nk 4 //Number of 32-bit words comprising the Cipher Key //happy
-#define BLOCKSIZE 255
+#define BLOCKSIZE 1  //CTR Block size
 
 #if Nk == 4
 #define AES_MAXNR 10 //10 round
@@ -31,21 +31,23 @@ typedef struct aes_key_st
     int rounds;
 } AES_KEY;
 
-void reset_count(unsigned char *count);
-int AES_set_encrypt_key(unsigned char *userKey,int bits, AES_KEY *key);
-void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key);
-void Count_Addition(unsigned char *count);
-void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, void *masterkey, unsigned char *count);
-void SubByte(unsigned char *state);
-void ShiftRow(unsigned char *state);
-void MixColumns(unsigned char *state);
-void AddRoundKey(unsigned char *state,AES_KEY *key, int *round);
+void reset_count(unsigned char *count);//count를 0로 리셋해주는 함수 Nonce 값은 제외
+int AES_set_encrypt_key(unsigned char *userKey,int bits, AES_KEY *key);//AES key 생성 (라운드키를 모두 생성한다)
+void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key);//AES encryption
+void Count_Addition(unsigned char *count);//AES -CTR 모드에서 Count를 1씩 증가해 주는 함수
+void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, void *masterkey, unsigned char *count);//AES CTR 운영모드 패딩 계산이 들어가있다
+void SubByte(unsigned char *state);//Subbyte
+void ShiftRow(unsigned char *state);//shiftRow
+void MixColumns(unsigned char *state);//Mixcolumn
+void AddRoundKey(unsigned char *state,AES_KEY *key, int *round);//Addround key
 
-//!FACE - Optimize
-void Make_LUTRd1(unsigned char LUT[][256],unsigned char LUT_plus[12],unsigned char *userkey,unsigned char *count);
-void AES_encrypt_FACE(unsigned char *in,unsigned char LUT[][256],unsigned char LUT_plus[12], unsigned char *out, AES_KEY *key);
-void CRYPTO_ctr128_encrypt_FACE(unsigned char *in, unsigned char *out, unsigned char LUT[][256],unsigned char LUT_plus[12],size_t len, void *masterkey, unsigned char *count);
+//!FACE - Optimize  --- AES - CTR 운영모드를 최적화 하는 모드이다. Round1,2 에 대한 연산을 테이블로 사전계산하여 만든 함수이다.
+void Make_LUTRd1(unsigned char LUT_Rd1[][256],unsigned char LUT_Rd1_plus[12],unsigned char *userkey,unsigned char *count);// LUK Table of Round 1
+void Make_LUTRd2(unsigned char LUT_Rd1[][256],unsigned char LUT_Rd1_plus[12],unsigned char LUT_Rd2_plus[4][4][256],unsigned char *userkey,unsigned char *count);//! LUK Table of Round 2
+void Make_Mixtable(unsigned char *state,unsigned char Mixtable[16],AES_KEY *key);// Mixcolumn 연산중에 중복되는 값들을 테이블로 만든것이다
+void AES_encrypt_FACE(unsigned char *in,unsigned char LUT_Rd2[4][4][256], unsigned char *out, AES_KEY *key);//AES encryption of FACE mode
+void CRYPTO_ctr128_encrypt_FACE(unsigned char *in, unsigned char *out, unsigned char LUT_Rd2[4][4][256],size_t len, void *masterkey, unsigned char *count);//AES CTR Mode of FACE Ver
 
-unsigned long long cpucycles();
+unsigned long long cpucycles();// cpucycle measuring instrument
 
 #endif
