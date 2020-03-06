@@ -338,9 +338,7 @@ int main()
         }
 
         // !Encrypt
-        in = testpt;
-        userkey = testkey;
-        CRYPTO_ctr128_encrypt(in, testout, 16 * (cnt_j + 1), userkey, testctr);
+        CRYPTO_ctr128_encrypt(testpt, testout, 16 * (cnt_j + 1), testkey, testctr);
 
         fprintf(ofp, "\nCT = ");// 출력시킬 파일에 Write 해주는 함수 CT값 Write
         for (cnt_i = 0; cnt_i < 16 * (cnt_j + 1); cnt_i++)
