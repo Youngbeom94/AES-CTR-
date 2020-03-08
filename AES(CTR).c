@@ -27,7 +27,7 @@ void reset_count(unsigned char *count)
 {
     int cnt_i = 0;
 
-    for (cnt_i = 12; cnt_i < 16; cnt_i++)
+    for (cnt_i = 0; cnt_i < 16; cnt_i++)
     {
         count[cnt_i] = 0x00;
     }
@@ -240,6 +240,31 @@ void Count_Addition(unsigned char *count) //Count 배열에서 값을 1증가시
     {
         count[cnt_i] = out[cnt_i];
     }
+}
+
+void Count_Addition_FACE_Light(unsigned char *count)//AES -CTR _FACE_Light 모드에서 Count를 1씩 증가해 주는 함수
+{
+    int cnt_i, carry = 0;           //맨처음 Carry 값은 0
+    unsigned char out[16] = {0x00}; // 최종배열
+    unsigned char one[16] = {0x00}; // 0x01을 의미하는 배열
+    one[15] = 0x01;
+
+    for (cnt_i = 4; cnt_i >= 0; cnt_i--)
+    {
+        out[cnt_i] = count[cnt_i] + one[cnt_i] + carry; // 마지막 배열 끼리 순차적으로 더해주면서 carry를 계산한다.
+        //만약 out의 결과값의 count값보다 작은 경우 carry가 발생했다. 만약 0xffffffff..인 경우 1을 더해주면 자동적으로 0x00상태로 돌아간다
+        if (out[cnt_i] < count[cnt_i])
+            carry = 1;
+        else
+        {
+            carry = 0;
+        }
+    }
+    for (cnt_i = 0; cnt_i < 16; cnt_i++)
+    {
+        count[cnt_i] = out[cnt_i];
+    }
+
 }
 
 void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, void *masterkey, unsigned char *count)
