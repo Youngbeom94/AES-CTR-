@@ -218,10 +218,58 @@ void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
 
     for (cnt_i = 1; cnt_i < AES_MAXNR; cnt_i++)
     {
+        //  if(cnt_i == 2)
+        // {
+        //      printf("\n\n");
+        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
+        //         {
+        //             printf("%02x ", state[cnt_j]);
+        //         }
+        // }
         SubByte(state);
+        //  if((cnt_i == 2) || (cnt_i ==3))
+        // {
+        //      printf("\nafter subbyte\n");
+        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
+        //         {
+        //             printf("%02x ", state[cnt_j]);
+        //         }
+        // }
         ShiftRow(state);
+        //  if(cnt_i == 2)
+        // {
+        //      printf("\nafter shift row\n");
+        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
+        //         {
+        //             printf("%02x ", state[cnt_j]);
+        //         }
+        // }
         MixColumns(state);
+        //  if(cnt_i == 2)
+        // {
+        //      printf("\nafter mixcolumn\n");
+        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
+        //         {
+        //             printf("%02x ", state[cnt_j]);
+        //         }
+        // }
         AddRoundKey(state, key, &round);
+        //  if(cnt_i == 2)
+        // {
+        //      printf("\nafter addround\n");
+        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
+        //         {
+        //             printf("%02x ", state[cnt_j]);
+        //         }
+        // }
+        // if(cnt_i == 1)
+        // {
+        //      printf("\n\n");
+        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
+        //         {
+        //             printf("%02x ", state[cnt_j]);
+        //         }
+        // }
     }
 
     SubByte(state);
@@ -329,7 +377,7 @@ void Count_Addition_FACE_Light(unsigned char *count, int cnt_k) //AES -CTR _FACE
         count[cnt_i] = out[cnt_i];
     }
 }
-void Count_Add_FACE_Light(unsigned char *count)//AES -CTR_FACE-LIGHT 모드에서 Count를 1씩 증가해 주는 함수
+void Count_Add_FACE_Light(unsigned char *count) //AES -CTR_FACE-LIGHT 모드에서 Count를 1씩 증가해 주는 함수
 {
     int cnt_i, carry = 0;           //맨처음 Carry 값은 0
     unsigned char out[16] = {0x00}; // 최종배열
@@ -351,7 +399,6 @@ void Count_Add_FACE_Light(unsigned char *count)//AES -CTR_FACE-LIGHT 모드에�
     {
         count[cnt_i] = out[cnt_i];
     }
-
 }
 
 void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, void *masterkey, unsigned char *count)
@@ -741,6 +788,14 @@ void state_copy(unsigned char *dst, unsigned char *src)
         dst[cnt_i] = src[cnt_i];
     }
 }
+void state_copy_12(unsigned char *dst, unsigned char *src)
+{
+    int cnt_i;
+    for (cnt_i = 4; cnt_i < 16; cnt_i++)
+    {
+        dst[cnt_i] = src[cnt_i];
+    }
+}
 void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256], unsigned char *userkey, unsigned char *count) //! LUK Table of FACE_Light
 {
     unsigned char MixTable[16] = {0x00};
@@ -776,14 +831,14 @@ void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256], unsigned char *userkey
                 else
                     LUT_FL[cnt_k][cnt_j][cnt_i] = state[cnt_j];
             }
-            Count_Addition_FACE_Light(count,cnt_k);
+            Count_Addition_FACE_Light(count, cnt_k);
             state_copy(state, count);
         }
         reset_count(state);
         reset_count(count);
     }
 }
-void AES_encrypt_FACE_Light(unsigned char *in,unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key)//AES encryption of FACE mode
+void AES_encrypt_FACE_Light(unsigned char *in, unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key) //AES encryption of FACE mode
 {
     unsigned char state[4 * Nb];
     int cnt_i;
@@ -817,7 +872,6 @@ void AES_encrypt_FACE_Light(unsigned char *in,unsigned char LUT_FL[4][4][256], u
     {
         out[cnt_i] = state[cnt_i];
     }
-
 }
 
 void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, unsigned char LUT_FL[4][4][256], size_t len, void *masterkey, unsigned char *count) //AES CTR Mode of FACE_Light ver
@@ -871,6 +925,213 @@ void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, uns
             iparray[cnt_j] = count[cnt_j];
         }
         AES_encrypt_FACE_Light(iparray, LUT_FL, oparray, key);
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            CT[cnt_i][cnt_j] = oparray[cnt_j] ^ PT[cnt_i][cnt_j];
+        }
+    }
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            out[cnt_i * 16 + cnt_j] = CT[cnt_i][cnt_j];
+        }
+    }
+}
+
+void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256], unsigned char LUT_Rd1_plus[12], unsigned char *userkey, unsigned char *count) //! LUK Table of FACE_Light
+{
+    unsigned char MixTable[16] = {0x00};
+    unsigned char temp_Rdkey[4] = {0x00};
+    unsigned char state[16] = {0x00};
+    unsigned char state_temp[16] = {0x00};
+    unsigned char n_block = 0x00;
+    unsigned char temp;
+    unsigned char src[4];
+    int round = 0;
+    int cnt_i, cnt_j, cnt_k = 0;
+    AES_KEY Key;
+    AES_KEY *key = &Key;
+    key->rounds = AES_set_encrypt_key(userkey, 128, key);
+    reset_count(count);
+
+    for (cnt_i = 0; cnt_i < 12; cnt_i++)
+    {
+        state_temp[cnt_i + 4] = LUT_Rd1_plus[cnt_i];
+    }
+    state_copy(state, state_temp);
+
+    // printf("\n\n");
+    // for ( cnt_i = 0; cnt_i < 16; cnt_i++)
+    // {
+    //     printf("%02x ", state[cnt_i]);
+    // }
+
+    for (cnt_k = 0; cnt_k < 4; cnt_k++)
+    {
+        for (cnt_i = 0; cnt_i < 256; cnt_i++)
+        {
+            round = 2;
+
+            // if(state[2] == 0x28)
+            // {
+            //     printf("\n %d %02x \n", cnt_k, cnt_i);
+            // SubByte(state);
+            // ShiftRow(state);
+            // MixColumns(state);
+            // AddRoundKey(state, key, &round);
+
+            // SubByte(state);
+            // printf("\nppp\n");
+            // for(cnt_j = 0 ; cnt_j < 16 ; cnt_j ++)
+            // {
+            //     printf("%02x ",state[cnt_j]);
+            // }
+            //  for (cnt_j = 0; cnt_j < 4; cnt_j++)
+            // {
+            //     if (cnt_k != 3)
+            //         LUT_FL[cnt_k][cnt_j][cnt_i] = state[((cnt_k + 1) * 4) + cnt_j];
+            //     else
+            //         LUT_FL[cnt_k][cnt_j][cnt_i] = state[cnt_j];
+            // }
+            // printf("\n");
+            // for(cnt_j = 0 ; cnt_j < 4 ; cnt_j ++)
+            // {
+            //     printf("%02x ",LUT_FL[cnt_k][cnt_j][cnt_i]);
+            // }
+            // }
+            SubByte(state);
+            ShiftRow(state);
+            MixColumns(state);
+            AddRoundKey(state, key, &round);
+
+            SubByte(state);
+            for (cnt_j = 0; cnt_j < 4; cnt_j++)
+            {
+                if (cnt_k != 3)
+                    LUT_FL[cnt_k][cnt_j][cnt_i] = state[((cnt_k + 1) * 4) + cnt_j];
+                else
+                    LUT_FL[cnt_k][cnt_j][cnt_i] = state[cnt_j];
+            }
+            Count_Addition_FACE_Light(count, cnt_k);
+            state_copy(state, count);
+            state_copy_12(state, state_temp);
+            
+        }
+        state_copy(state, state_temp);
+    }
+    reset_count(count);
+    //     printf("\n");
+    // for(cnt_i = 0 ; cnt_i < 1 ; cnt_i ++)
+    // {
+    //     for(cnt_j = 0 ; cnt_j < 4 ; cnt_j ++)
+    //     {
+    //         printf("%02x ",LUT_FL[0][cnt_j][cnt_i]);
+    //     }
+    //     printf("\n");
+    // }
+}
+void AES_encrypt_FACE_EX(unsigned char *in, unsigned char LUT_Rd1[][256], unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key) //AES encryption of FACE mode
+{
+    unsigned char state[4 * Nb];
+    int cnt_i;
+    int round = 3;
+
+    for (cnt_i = 0; cnt_i < 4; cnt_i++)
+    {
+        state[cnt_i] = LUT_FL[3][cnt_i][LUT_Rd1[0][in[15]]];
+        state[cnt_i + 4] = LUT_FL[0][cnt_i][LUT_Rd1[1][in[15]]];
+        state[cnt_i + 8] = LUT_FL[1][cnt_i][LUT_Rd1[2][in[15]]];
+        state[cnt_i + 12] = LUT_FL[2][cnt_i][LUT_Rd1[3][in[15]]];
+    }
+    
+    // printf("\n");
+    // for(cnt_i = 0 ; cnt_i < 16 ; cnt_i ++)
+    // {
+       
+    //         printf("%02x ",state[cnt_i]);
+    // }
+    // printf("\n");
+    // for(cnt_i = 0 ; cnt_i < 4 ; cnt_i ++)
+    // {
+       
+    //         printf("%02x ",LUT_FL[2][cnt_i][in[15]]);
+    // }
+
+    ShiftRow(state);
+    MixColumns(state);
+    AddRoundKey(state, key, &round);
+
+    for (cnt_i = 4; cnt_i < AES_MAXNR; cnt_i++)
+    {
+        SubByte(state);
+        ShiftRow(state);
+        MixColumns(state);
+        AddRoundKey(state, key, &round);
+    }
+
+    SubByte(state);
+    ShiftRow(state);
+    AddRoundKey(state, key, &round);
+
+    for (cnt_i = 0; cnt_i < 4 * Nb; cnt_i++)
+    {
+        out[cnt_i] = state[cnt_i];
+    }
+}
+
+void CRYPTO_ctr128_encrypt_FACE_Ex(unsigned char *in, unsigned char *out, unsigned char LUT_Rd1[][256], unsigned char LUT_FL[4][4][256], size_t len, void *masterkey, unsigned char *count) //AES CTR Mode of FACE Ver
+{
+    int cnt_i, cnt_j;
+    int paddingcnt = len % 16;
+    unsigned char PT[BLOCKSIZE][16] = {0x00};
+    unsigned char CT[BLOCKSIZE][16] = {0x00};
+    unsigned char iparray[16];
+    unsigned char oparray[16];
+    AES_KEY USER_KEY;
+    AES_KEY *key = &USER_KEY;
+
+    key->rounds = AES_set_encrypt_key(masterkey, AES_KEY_BIT, key); //!
+    reset_count(count);
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE - 1; cnt_i++)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            PT[cnt_i][cnt_j] = in[cnt_i * 16 + cnt_j];
+        }
+    }
+    if (paddingcnt == 0)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
+        }
+    }
+
+    if (paddingcnt != 0) // 패딩 함수.
+    {
+        for (cnt_j = 0; cnt_j < paddingcnt; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
+        }
+        for (cnt_j = paddingcnt; cnt_j < 16; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = (0x10 - paddingcnt);
+        }
+    }
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++) //각각의 count마다 1더하기 해주고, 암호화 시킨다음에 PT와 XoR 해준다. CORE
+    {
+        if (cnt_i != 0)
+            Count_Addition(count);
+
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            iparray[cnt_j] = count[cnt_j];
+        }
+        AES_encrypt_FACE_EX(iparray, LUT_Rd1, LUT_FL, oparray, key);
         for (cnt_j = 0; cnt_j < 16; cnt_j++)
         {
             CT[cnt_i][cnt_j] = oparray[cnt_j] ^ PT[cnt_i][cnt_j];

@@ -42,21 +42,33 @@ int main()
     }
 
     // //! Encrypt of FACE
+    // Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
+    // Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count);
+    // CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
+
+    // printf("\n\nFACE ver CTR Encrypt txt\n");
+    // for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
+    // {
+    //     if ((cnt_i % 16 == 0) && (cnt_i != 0))
+    //         printf("\n");
+    //     printf("%02x ", out[cnt_i]);
+    // }
+
+    // Make_LUT_Face_Light(LUT_FL,userkey,count);
+    // CRYPTO_ctr128_encrypt_FACE_Light(in,out,LUT_FL,BLOCKSIZE * 16,userkey,count);
+    // printf("\n\nFACE_Light ver CTR Encrypt txt\n");
+    // for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
+    // {
+    //     if ((cnt_i % 16 == 0) && (cnt_i != 0))
+    //         printf("\n");
+    //     printf("%02x ", out[cnt_i]);
+    // }
+
     Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
-    Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count);
-    CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
+    Make_LUT_Face_Ex(LUT_FL,LUT_Rd1_plus,userkey,count);
+    CRYPTO_ctr128_encrypt_FACE_Ex(in, out, LUT_Rd1,LUT_FL, BLOCKSIZE * 16, userkey, count);
 
-    printf("\n\nFACE ver CTR Encrypt txt\n");
-    for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
-    {
-        if ((cnt_i % 16 == 0) && (cnt_i != 0))
-            printf("\n");
-        printf("%02x ", out[cnt_i]);
-    }
-
-    Make_LUT_Face_Light(LUT_FL,userkey,count);
-    CRYPTO_ctr128_encrypt_FACE_Light(in,out,LUT_FL,BLOCKSIZE * 16,userkey,count);
-    printf("\n\nFACE_Light ver CTR Encrypt txt\n");
+    printf("\n\nFACE - Ex Encrypt txt\n");
     for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
     {
         if ((cnt_i % 16 == 0) && (cnt_i != 0))

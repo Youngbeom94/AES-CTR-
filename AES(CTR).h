@@ -12,7 +12,7 @@
 #define xtime(x) ((x << 1) ^ (((x >> 7) & 1) * 0x1b))
 #define Nb 4 //Number of colmns
 #define Nk 4 //Number of 32-bit words comprising the Cipher Key //happy
-#define BLOCKSIZE  3//!CTR Block size
+#define BLOCKSIZE  1//!CTR Block size
 
 #if Nk == 4
 #define AES_MAXNR 10 //10 round
@@ -56,6 +56,13 @@ void state_copy(unsigned char *dst , unsigned char *src);
 void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256],unsigned char *userkey,unsigned char *count);//! LUK Table of FACE_Light
 void AES_encrypt_FACE_Light(unsigned char *in,unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key);//AES encryption of FACE mode
 void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, unsigned char LUT_FL[4][4][256],size_t len, void *masterkey, unsigned char *count);//AES CTR Mode of FACE Ver
+
+
+//!FACE - Extended - Optimize
+void state_copy_12(unsigned char *dst , unsigned char *src);
+void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256],unsigned char LUT_Rd1_plus[12],unsigned char *userkey,unsigned char *count);//! LUK Table of FACE_Light
+void AES_encrypt_FACE_EX(unsigned char *in,unsigned char LUT_Rd1[][256],unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key);//AES encryption of FACE mode
+void CRYPTO_ctr128_encrypt_FACE_Ex(unsigned char *in, unsigned char *out, unsigned char LUT_Rd1[][256],unsigned char LUT_FL[4][4][256],size_t len, void *masterkey, unsigned char *count);//AES CTR Mode of FACE Ver
 
 
 
