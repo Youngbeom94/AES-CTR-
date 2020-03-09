@@ -187,6 +187,21 @@ void AddRoundKey(unsigned char *state, AES_KEY *key, int *round)
     }
     *round += 1;
 }
+void AddRoundKey_For_FL(unsigned char *state, AES_KEY *key, int *round) //Addround key
+{
+    int cnt_i, cnt_j = 0;
+    int temp;
+    for (cnt_i = 0; cnt_i < 4; cnt_i++)
+    { // 키는 int 배열 4개이고 state는 byte배열 16개 이므로 XoR시 쪼개고 합치는 과정이 필요
+        for (cnt_j = 0; cnt_j < 4; cnt_j++)
+        {
+            temp = (key->rd_key[(*round * 4) + cnt_i]);
+            temp = temp >> (24 - (8 * cnt_j));
+            temp &= 0x000000ff;
+            state[cnt_j + (cnt_i * 4)] ^= temp;
+        }
+    }
+}
 
 void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
 {
@@ -200,7 +215,7 @@ void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
     }
 
     AddRoundKey(state, key, &round); //Round 0때는 오직 AddRoundkey 함수 연산만 있다
-    
+
     for (cnt_i = 1; cnt_i < AES_MAXNR; cnt_i++)
     {
         SubByte(state);
@@ -242,14 +257,86 @@ void Count_Addition(unsigned char *count) //Count 배열에서 값을 1증가시
     }
 }
 
-void Count_Addition_FACE_Light(unsigned char *count)//AES -CTR _FACE_Light 모드에서 Count를 1씩 증가해 주는 함수
+void Count_Addition_FACE_Light(unsigned char *count, int cnt_k) //AES -CTR _FACE_Light 모드에서 Count를 1씩 증가해 주는 함수
 {
     int cnt_i, carry = 0;           //맨처음 Carry 값은 0
     unsigned char out[16] = {0x00}; // 최종배열
     unsigned char one[16] = {0x00}; // 0x01을 의미하는 배열
-    one[15] = 0x01;
 
-    for (cnt_i = 4; cnt_i >= 0; cnt_i--)
+    if (cnt_k == 0)
+    {
+        one[3] = 0x01;
+        for (cnt_i = 3; cnt_i >= 0; cnt_i--)
+        {
+            out[cnt_i] = count[cnt_i] + one[cnt_i] + carry; // 마지막 배열 끼리 순차적으로 더해주면서 carry를 계산한다.
+            //만약 out의 결과값의 count값보다 작은 경우 carry가 발생했다. 만약 0xffffffff..인 경우 1을 더해주면 자동적으로 0x00상태로 돌아간다
+            if (out[cnt_i] < count[cnt_i])
+                carry = 1;
+            else
+            {
+                carry = 0;
+            }
+        }
+    }
+    else if (cnt_k == 1)
+    {
+        one[2] = 0x01;
+        for (cnt_i = 2; cnt_i >= 0; cnt_i--)
+        {
+            out[cnt_i] = count[cnt_i] + one[cnt_i] + carry; // 마지막 배열 끼리 순차적으로 더해주면서 carry를 계산한다.
+            //만약 out의 결과값의 count값보다 작은 경우 carry가 발생했다. 만약 0xffffffff..인 경우 1을 더해주면 자동적으로 0x00상태로 돌아간다
+            if (out[cnt_i] < count[cnt_i])
+                carry = 1;
+            else
+            {
+                carry = 0;
+            }
+        }
+    }
+    else if (cnt_k == 2)
+    {
+        one[1] = 0x01;
+        for (cnt_i = 1; cnt_i >= 0; cnt_i--)
+        {
+            out[cnt_i] = count[cnt_i] + one[cnt_i] + carry; // 마지막 배열 끼리 순차적으로 더해주면서 carry를 계산한다.
+            //만약 out의 결과값의 count값보다 작은 경우 carry가 발생했다. 만약 0xffffffff..인 경우 1을 더해주면 자동적으로 0x00상태로 돌아간다
+            if (out[cnt_i] < count[cnt_i])
+                carry = 1;
+            else
+            {
+                carry = 0;
+            }
+        }
+    }
+    else
+    {
+        one[0] = 0x01;
+        for (cnt_i = 0; cnt_i >= 0; cnt_i--)
+        {
+            out[cnt_i] = count[cnt_i] + one[cnt_i] + carry; // 마지막 배열 끼리 순차적으로 더해주면서 carry를 계산한다.
+            //만약 out의 결과값의 count값보다 작은 경우 carry가 발생했다. 만약 0xffffffff..인 경우 1을 더해주면 자동적으로 0x00상태로 돌아간다
+            if (out[cnt_i] < count[cnt_i])
+                carry = 1;
+            else
+            {
+                carry = 0;
+            }
+        }
+    }
+
+    for (cnt_i = 0; cnt_i < 16; cnt_i++)
+    {
+        count[cnt_i] = out[cnt_i];
+    }
+}
+void Count_Add_FACE_Light(unsigned char *count)//AES -CTR_FACE-LIGHT 모드에서 Count를 1씩 증가해 주는 함수
+{
+    int cnt_i, carry = 0;           //맨처음 Carry 값은 0
+    unsigned char out[16] = {0x00}; // 최종배열
+    unsigned char one[16] = {0x00}; // 0x01을 의미하는 배열
+    one[3] = 0x01;
+
+    for (cnt_i = 3; cnt_i >= 0; cnt_i--)
     {
         out[cnt_i] = count[cnt_i] + one[cnt_i] + carry; // 마지막 배열 끼리 순차적으로 더해주면서 carry를 계산한다.
         //만약 out의 결과값의 count값보다 작은 경우 carry가 발생했다. 만약 0xffffffff..인 경우 1을 더해주면 자동적으로 0x00상태로 돌아간다
@@ -333,8 +420,8 @@ void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, vo
 }
 void Make_LUTRd1(unsigned char LUT[][256], unsigned char LUT_plus[12], unsigned char *userkey, unsigned char *count)
 {
-    unsigned char Rd0Table[12] = {0x00};//Round0 에 관해 테이블을 형성해 주는 변수이다.
-    unsigned char state[16] = {0x00};//상태값을 저장해주는 변수
+    unsigned char Rd0Table[12] = {0x00}; //Round0 에 관해 테이블을 형성해 주는 변수이다.
+    unsigned char state[16] = {0x00};    //상태값을 저장해주는 변수
     unsigned char round = 0x00;
     int rd_AES = 1;
     int cnt_i, cnt_j = 0;
@@ -343,7 +430,7 @@ void Make_LUTRd1(unsigned char LUT[][256], unsigned char LUT_plus[12], unsigned 
     key->rounds = AES_set_encrypt_key(userkey, 128, key);
     reset_count(count);
 
-    for (cnt_i = 0; cnt_i < 3; cnt_i++)//Ctr 값이 1증가하고 나머지는 같다.
+    for (cnt_i = 0; cnt_i < 3; cnt_i++) //Ctr 값이 1증가하고 나머지는 같다.
     {
         for (cnt_j = 0; cnt_j < 4; cnt_j++)
         {
@@ -355,14 +442,14 @@ void Make_LUTRd1(unsigned char LUT[][256], unsigned char LUT_plus[12], unsigned 
     {
         for (cnt_j = 0; cnt_j < 12; cnt_j++)
         {
-            state[cnt_j] = Rd0Table[cnt_j];// 기존 state는 첫번째 블록과 동일하므로(0 - 12 까지) Round 0를 이용한다.
+            state[cnt_j] = Rd0Table[cnt_j]; // 기존 state는 첫번째 블록과 동일하므로(0 - 12 까지) Round 0를 이용한다.
         }
-        state[12] = userkey[12];//나머지변수는 직접 채워준다.
+        state[12] = userkey[12]; //나머지변수는 직접 채워준다.
         state[13] = userkey[13];
         state[14] = userkey[14];
         state[15] = round ^ userkey[15];
 
-        rd_AES = 1;// Table을 만들어주기위해 설정해준 Round 변수.
+        rd_AES = 1; // Table을 만들어주기위해 설정해준 Round 변수.
         SubByte(state);
         ShiftRow(state);
         MixColumns(state);
@@ -395,23 +482,23 @@ void Make_LUTRd2(unsigned char LUT_Rd1[][256], unsigned char LUT_Rd1_plus[12], u
     AES_KEY *key = &Key;
     key->rounds = AES_set_encrypt_key(userkey, 128, key);
 
-    for (cnt_i = 0; cnt_i < 4; cnt_i++)//Make_LUTRD2함수를 통해 만들어준 LUT_RD1테이블을 이용하여 state 값을 갱신시킨다.
+    for (cnt_i = 0; cnt_i < 4; cnt_i++) //Make_LUTRD2함수를 통해 만들어준 LUT_RD1테이블을 이용하여 state 값을 갱신시킨다.
     {
         state[cnt_i] = LUT_Rd1[cnt_i][n_block];
     }
     for (cnt_i = 0; cnt_i < 12; cnt_i++)
     {
-        state[cnt_i + 4] = LUT_Rd1_plus[cnt_i];//위와 마찬가지이다.
+        state[cnt_i + 4] = LUT_Rd1_plus[cnt_i]; //위와 마찬가지이다.
     }
 
-    SubByte(state);//2라운드의 Subyte이다.
-    ShiftRow(state);//2라운드의 ShiftRow이다.
-    Make_Mixtable(state, MixTable, key);//Mixcolumn 연산을 하기전에 중복되는 값들을 테이블로 저장하기 위한 Table을 만들어주는 함수이다.
+    SubByte(state);                      //2라운드의 Subyte이다.
+    ShiftRow(state);                     //2라운드의 ShiftRow이다.
+    Make_Mixtable(state, MixTable, key); //Mixcolumn 연산을 하기전에 중복되는 값들을 테이블로 저장하기 위한 Table을 만들어주는 함수이다.
 
     for (cnt_i = 0; cnt_i < 256; cnt_i++)
-    {//위의 LUT_Rd1테이블은 Round1이 끝났을때 상태값이며, Subyte와  ShiftRow가 적용되지 않은 상태이다. ShiftRow까지 생각해서 만든 Mixtable이니 Subyte만 넣어주면된다. 
-        temp = xtime(sbox[LUT_Rd1[0][cnt_i]]); //? 2 1 1 3 S[0]
-        LUT_Rd2_plus[0][0][cnt_i] = temp ^ MixTable[0];//MixTable은 Addroundkey 까지 XoR 한 값이 들어가있으므로 xtime함수를 적절히 호출하여 XoR만 해주면된다.
+    {                                                   //위의 LUT_Rd1테이블은 Round1이 끝났을때 상태값이며, Subyte와  ShiftRow가 적용되지 않은 상태이다. ShiftRow까지 생각해서 만든 Mixtable이니 Subyte만 넣어주면된다.
+        temp = xtime(sbox[LUT_Rd1[0][cnt_i]]);          //? 2 1 1 3 S[0]
+        LUT_Rd2_plus[0][0][cnt_i] = temp ^ MixTable[0]; //MixTable은 Addroundkey 까지 XoR 한 값이 들어가있으므로 xtime함수를 적절히 호출하여 XoR만 해주면된다.
         LUT_Rd2_plus[0][1][cnt_i] = sbox[LUT_Rd1[0][cnt_i]] ^ MixTable[1];
         LUT_Rd2_plus[0][2][cnt_i] = sbox[LUT_Rd1[0][cnt_i]] ^ MixTable[2];
         LUT_Rd2_plus[0][3][cnt_i] = sbox[LUT_Rd1[0][cnt_i]] ^ temp ^ MixTable[3];
@@ -434,7 +521,6 @@ void Make_LUTRd2(unsigned char LUT_Rd1[][256], unsigned char LUT_Rd1_plus[12], u
         LUT_Rd2_plus[3][2][cnt_i] = sbox[LUT_Rd1[1][cnt_i]] ^ MixTable[14];
         LUT_Rd2_plus[3][3][cnt_i] = sbox[LUT_Rd1[1][cnt_i]] ^ MixTable[15];
     }
-
 }
 
 void Make_Mixtable(unsigned char *state, unsigned char Mixtable[16], AES_KEY *key)
@@ -550,7 +636,7 @@ void Make_Mixtable(unsigned char *state, unsigned char Mixtable[16], AES_KEY *ke
 }
 
 void AES_encrypt_FACE(unsigned char *in, unsigned char LUT_Rd2[4][4][256], unsigned char *out, AES_KEY *key)
-{//Round만 수정하였다. Face 최적화를 적용하기 위해서
+{ //Round만 수정하였다. Face 최적화를 적용하기 위해서
     unsigned char state[4 * Nb];
     int cnt_i;
     int round = 3;
@@ -582,7 +668,7 @@ void AES_encrypt_FACE(unsigned char *in, unsigned char LUT_Rd2[4][4][256], unsig
 }
 
 void CRYPTO_ctr128_encrypt_FACE(unsigned char *in, unsigned char *out, unsigned char LUT_Rd2[4][4][256], size_t len, void *masterkey, unsigned char *count)
-{//함수만 수정하였다. FACE최적화를 위해서
+{ //함수만 수정하였다. FACE최적화를 위해서
     int cnt_i, cnt_j;
     int paddingcnt = len % 16;
     unsigned char PT[BLOCKSIZE][16] = {0x00};
@@ -632,6 +718,159 @@ void CRYPTO_ctr128_encrypt_FACE(unsigned char *in, unsigned char *out, unsigned 
             iparray[cnt_j] = count[cnt_j];
         }
         AES_encrypt_FACE(iparray, LUT_Rd2, oparray, key);
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            CT[cnt_i][cnt_j] = oparray[cnt_j] ^ PT[cnt_i][cnt_j];
+        }
+    }
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            out[cnt_i * 16 + cnt_j] = CT[cnt_i][cnt_j];
+        }
+    }
+}
+
+void state_copy(unsigned char *dst, unsigned char *src)
+{
+    int cnt_i;
+    for (cnt_i = 0; cnt_i < 16; cnt_i++)
+    {
+        dst[cnt_i] = src[cnt_i];
+    }
+}
+void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256], unsigned char *userkey, unsigned char *count) //! LUK Table of FACE_Light
+{
+    unsigned char MixTable[16] = {0x00};
+    unsigned char temp_Rdkey[4] = {0x00};
+    unsigned char state[16] = {0x00};
+    unsigned char n_block = 0x00;
+    unsigned char temp;
+    unsigned char src[4];
+    int round = 0;
+    int cnt_i, cnt_j, cnt_k = 0;
+    AES_KEY Key;
+    AES_KEY *key = &Key;
+    key->rounds = AES_set_encrypt_key(userkey, 128, key);
+    reset_count(count);
+
+    for (cnt_k = 0; cnt_k < 4; cnt_k++)
+    {
+        for (cnt_i = 0; cnt_i < 256; cnt_i++)
+        {
+            round = 0x00;
+            AddRoundKey(state, key, &round);
+
+            SubByte(state);
+            ShiftRow(state);
+            MixColumns(state);
+            AddRoundKey(state, key, &round);
+
+            SubByte(state);
+            for (cnt_j = 0; cnt_j < 4; cnt_j++)
+            {
+                if (cnt_k != 3)
+                    LUT_FL[cnt_k][cnt_j][cnt_i] = state[((cnt_k + 1) * 4) + cnt_j];
+                else
+                    LUT_FL[cnt_k][cnt_j][cnt_i] = state[cnt_j];
+            }
+            Count_Addition_FACE_Light(count,cnt_k);
+            state_copy(state, count);
+        }
+        reset_count(state);
+        reset_count(count);
+    }
+}
+void AES_encrypt_FACE_Light(unsigned char *in,unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key)//AES encryption of FACE mode
+{
+    unsigned char state[4 * Nb];
+    int cnt_i;
+    int round = 2;
+
+    for (cnt_i = 0; cnt_i < 4; cnt_i++)
+    {
+        state[cnt_i] = LUT_FL[3][cnt_i][in[0]];
+        state[cnt_i + 4] = LUT_FL[0][cnt_i][in[3]];
+        state[cnt_i + 8] = LUT_FL[1][cnt_i][in[2]];
+        state[cnt_i + 12] = LUT_FL[2][cnt_i][in[1]];
+    }
+
+    ShiftRow(state);
+    MixColumns(state);
+    AddRoundKey(state, key, &round);
+
+    for (cnt_i = 3; cnt_i < AES_MAXNR; cnt_i++)
+    {
+        SubByte(state);
+        ShiftRow(state);
+        MixColumns(state);
+        AddRoundKey(state, key, &round);
+    }
+
+    SubByte(state);
+    ShiftRow(state);
+    AddRoundKey(state, key, &round);
+
+    for (cnt_i = 0; cnt_i < 4 * Nb; cnt_i++)
+    {
+        out[cnt_i] = state[cnt_i];
+    }
+
+}
+
+void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, unsigned char LUT_FL[4][4][256], size_t len, void *masterkey, unsigned char *count) //AES CTR Mode of FACE_Light ver
+{
+    int cnt_i, cnt_j;
+    int paddingcnt = len % 16;
+    unsigned char PT[BLOCKSIZE][16] = {0x00};
+    unsigned char CT[BLOCKSIZE][16] = {0x00};
+    unsigned char iparray[16];
+    unsigned char oparray[16];
+    AES_KEY USER_KEY;
+    AES_KEY *key = &USER_KEY;
+
+    key->rounds = AES_set_encrypt_key(masterkey, AES_KEY_BIT, key); //!
+    reset_count(count);
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE - 1; cnt_i++)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            PT[cnt_i][cnt_j] = in[cnt_i * 16 + cnt_j];
+        }
+    }
+    if (paddingcnt == 0)
+    {
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
+        }
+    }
+
+    if (paddingcnt != 0) // 패딩 함수.
+    {
+        for (cnt_j = 0; cnt_j < paddingcnt; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
+        }
+        for (cnt_j = paddingcnt; cnt_j < 16; cnt_j++)
+        {
+            PT[BLOCKSIZE - 1][cnt_j] = (0x10 - paddingcnt);
+        }
+    }
+
+    for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++) //각각의 count마다 1더하기 해주고, 암호화 시킨다음에 PT와 XoR 해준다. CORE
+    {
+        if (cnt_i != 0)
+            Count_Add_FACE_Light(count);
+
+        for (cnt_j = 0; cnt_j < 16; cnt_j++)
+        {
+            iparray[cnt_j] = count[cnt_j];
+        }
+        AES_encrypt_FACE_Light(iparray, LUT_FL, oparray, key);
         for (cnt_j = 0; cnt_j < 16; cnt_j++)
         {
             CT[cnt_i][cnt_j] = oparray[cnt_j] ^ PT[cnt_i][cnt_j];
