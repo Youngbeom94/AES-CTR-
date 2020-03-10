@@ -6,10 +6,10 @@ unsigned char in[BLOCKSIZE * 16] = {0x00};
 unsigned char userkey[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 unsigned char out[BLOCKSIZE * 16] = {0x00};
 unsigned char count[16] = {0x00,0x00,0x00,0x00};
-unsigned char LUT_Rd1[4][256] = {0x00};
+unsigned char LUT_Rd1[4][256] = {{0x00}};
 unsigned char LUT_Rd1_plus[12] = {0x00};
-unsigned char LUT_Rd2_plus[4][4][256] = {0x00};
-unsigned char LUT_FL[4][4][256] = {0x00};
+unsigned char LUT_Rd2_plus[4][4][256] = {{{0x00}}};
+unsigned char LUT_FL[4][4][256] = {{{0x00}}};
 
 //! CTR TEST
 #if 1
@@ -42,27 +42,27 @@ int main()
     }
 
     // //! Encrypt of FACE
-    // Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
-    // Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count);
-    // CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
+    Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
+    Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count);
+    CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
 
-    // printf("\n\nFACE ver CTR Encrypt txt\n");
-    // for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
-    // {
-    //     if ((cnt_i % 16 == 0) && (cnt_i != 0))
-    //         printf("\n");
-    //     printf("%02x ", out[cnt_i]);
-    // }
+    printf("\n\nFACE ver CTR Encrypt txt\n");
+    for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
+    {
+        if ((cnt_i % 16 == 0) && (cnt_i != 0))
+            printf("\n");
+        printf("%02x ", out[cnt_i]);
+    }
 
-    // Make_LUT_Face_Light(LUT_FL,userkey,count);
-    // CRYPTO_ctr128_encrypt_FACE_Light(in,out,LUT_FL,BLOCKSIZE * 16,userkey,count);
-    // printf("\n\nFACE_Light ver CTR Encrypt txt\n");
-    // for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
-    // {
-    //     if ((cnt_i % 16 == 0) && (cnt_i != 0))
-    //         printf("\n");
-    //     printf("%02x ", out[cnt_i]);
-    // }
+    Make_LUT_Face_Light(LUT_FL,userkey,count);
+    CRYPTO_ctr128_encrypt_FACE_Light(in,out,LUT_FL,BLOCKSIZE * 16,userkey,count);
+    printf("\n\nFACE_Light ver CTR Encrypt txt\n");
+    for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
+    {
+        if ((cnt_i % 16 == 0) && (cnt_i != 0))
+            printf("\n");
+        printf("%02x ", out[cnt_i]);
+    }
 
     Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
     Make_LUT_Face_Ex(LUT_FL,LUT_Rd1_plus,userkey,count);

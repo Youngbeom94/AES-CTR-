@@ -218,58 +218,10 @@ void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
 
     for (cnt_i = 1; cnt_i < AES_MAXNR; cnt_i++)
     {
-        //  if(cnt_i == 2)
-        // {
-        //      printf("\n\n");
-        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
-        //         {
-        //             printf("%02x ", state[cnt_j]);
-        //         }
-        // }
         SubByte(state);
-        //  if((cnt_i == 2) || (cnt_i ==3))
-        // {
-        //      printf("\nafter subbyte\n");
-        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
-        //         {
-        //             printf("%02x ", state[cnt_j]);
-        //         }
-        // }
         ShiftRow(state);
-        //  if(cnt_i == 2)
-        // {
-        //      printf("\nafter shift row\n");
-        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
-        //         {
-        //             printf("%02x ", state[cnt_j]);
-        //         }
-        // }
         MixColumns(state);
-        //  if(cnt_i == 2)
-        // {
-        //      printf("\nafter mixcolumn\n");
-        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
-        //         {
-        //             printf("%02x ", state[cnt_j]);
-        //         }
-        // }
         AddRoundKey(state, key, &round);
-        //  if(cnt_i == 2)
-        // {
-        //      printf("\nafter addround\n");
-        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
-        //         {
-        //             printf("%02x ", state[cnt_j]);
-        //         }
-        // }
-        // if(cnt_i == 1)
-        // {
-        //      printf("\n\n");
-        //     for (int cnt_j = 0; cnt_j < 16; cnt_j++)
-        //         {
-        //             printf("%02x ", state[cnt_j]);
-        //         }
-        // }
     }
 
     SubByte(state);
@@ -405,8 +357,8 @@ void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, vo
 {
     int cnt_i, cnt_j;
     int paddingcnt = len % 16;
-    unsigned char PT[BLOCKSIZE][16] = {0x00};
-    unsigned char CT[BLOCKSIZE][16] = {0x00};
+    unsigned char PT[BLOCKSIZE][16] = {{0x00}};
+    unsigned char CT[BLOCKSIZE][16] = {{0x00}};
     unsigned char iparray[16];
     unsigned char oparray[16];
     AES_KEY USER_KEY;
@@ -517,14 +469,10 @@ void Make_LUTRd1(unsigned char LUT[][256], unsigned char LUT_plus[12], unsigned 
 void Make_LUTRd2(unsigned char LUT_Rd1[][256], unsigned char LUT_Rd1_plus[12], unsigned char LUT_Rd2_plus[4][4][256], unsigned char *userkey, unsigned char *count)
 {
     unsigned char MixTable[16] = {0x00};
-    unsigned char temp_Rdkey[4] = {0x00};
     unsigned char state[16] = {0x00};
-    unsigned char round = 0x00;
     unsigned char n_block = 0x00;
     unsigned char temp;
-    unsigned char src[4];
-    int rd_AES = 2;
-    int cnt_i, cnt_j, cnt_k = 0;
+    int cnt_i = 0;
     AES_KEY Key;
     AES_KEY *key = &Key;
     key->rounds = AES_set_encrypt_key(userkey, 128, key);
@@ -573,7 +521,6 @@ void Make_LUTRd2(unsigned char LUT_Rd1[][256], unsigned char LUT_Rd1_plus[12], u
 void Make_Mixtable(unsigned char *state, unsigned char Mixtable[16], AES_KEY *key)
 {
     unsigned char temp[2];
-    unsigned char src[4];
     unsigned char keytemp = 0x00;
     //MixTable의 원리는 기존 iv[15]값에서 count값이 1증가할때 마다,
     // Round1이 끝났을때 실제로 바뀌는 값은 첫번째 열뿐이라는 사실이다. 그래서 중복되는 Mixcolumn값과 Roundkey계산을 미리한다.
@@ -718,8 +665,8 @@ void CRYPTO_ctr128_encrypt_FACE(unsigned char *in, unsigned char *out, unsigned 
 { //함수만 수정하였다. FACE최적화를 위해서
     int cnt_i, cnt_j;
     int paddingcnt = len % 16;
-    unsigned char PT[BLOCKSIZE][16] = {0x00};
-    unsigned char CT[BLOCKSIZE][16] = {0x00};
+    unsigned char PT[BLOCKSIZE][16] = {{0x00}};
+    unsigned char CT[BLOCKSIZE][16] = {{0x00}};
     unsigned char iparray[16];
     unsigned char oparray[16];
     AES_KEY USER_KEY;
@@ -798,12 +745,7 @@ void state_copy_12(unsigned char *dst, unsigned char *src)
 }
 void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256], unsigned char *userkey, unsigned char *count) //! LUK Table of FACE_Light
 {
-    unsigned char MixTable[16] = {0x00};
-    unsigned char temp_Rdkey[4] = {0x00};
     unsigned char state[16] = {0x00};
-    unsigned char n_block = 0x00;
-    unsigned char temp;
-    unsigned char src[4];
     int round = 0;
     int cnt_i, cnt_j, cnt_k = 0;
     AES_KEY Key;
@@ -878,8 +820,8 @@ void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, uns
 {
     int cnt_i, cnt_j;
     int paddingcnt = len % 16;
-    unsigned char PT[BLOCKSIZE][16] = {0x00};
-    unsigned char CT[BLOCKSIZE][16] = {0x00};
+    unsigned char PT[BLOCKSIZE][16] = {{0x00}};
+    unsigned char CT[BLOCKSIZE][16] = {{0x00}};
     unsigned char iparray[16];
     unsigned char oparray[16];
     AES_KEY USER_KEY;
@@ -942,13 +884,8 @@ void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, uns
 
 void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256], unsigned char LUT_Rd1_plus[12], unsigned char *userkey, unsigned char *count) //! LUK Table of FACE_Light
 {
-    unsigned char MixTable[16] = {0x00};
-    unsigned char temp_Rdkey[4] = {0x00};
     unsigned char state[16] = {0x00};
     unsigned char state_temp[16] = {0x00};
-    unsigned char n_block = 0x00;
-    unsigned char temp;
-    unsigned char src[4];
     int round = 0;
     int cnt_i, cnt_j, cnt_k = 0;
     AES_KEY Key;
@@ -962,45 +899,11 @@ void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256], unsigned char LUT_Rd1_plu
     }
     state_copy(state, state_temp);
 
-    // printf("\n\n");
-    // for ( cnt_i = 0; cnt_i < 16; cnt_i++)
-    // {
-    //     printf("%02x ", state[cnt_i]);
-    // }
-
     for (cnt_k = 0; cnt_k < 4; cnt_k++)
     {
         for (cnt_i = 0; cnt_i < 256; cnt_i++)
         {
             round = 2;
-
-            // if(state[2] == 0x28)
-            // {
-            //     printf("\n %d %02x \n", cnt_k, cnt_i);
-            // SubByte(state);
-            // ShiftRow(state);
-            // MixColumns(state);
-            // AddRoundKey(state, key, &round);
-
-            // SubByte(state);
-            // printf("\nppp\n");
-            // for(cnt_j = 0 ; cnt_j < 16 ; cnt_j ++)
-            // {
-            //     printf("%02x ",state[cnt_j]);
-            // }
-            //  for (cnt_j = 0; cnt_j < 4; cnt_j++)
-            // {
-            //     if (cnt_k != 3)
-            //         LUT_FL[cnt_k][cnt_j][cnt_i] = state[((cnt_k + 1) * 4) + cnt_j];
-            //     else
-            //         LUT_FL[cnt_k][cnt_j][cnt_i] = state[cnt_j];
-            // }
-            // printf("\n");
-            // for(cnt_j = 0 ; cnt_j < 4 ; cnt_j ++)
-            // {
-            //     printf("%02x ",LUT_FL[cnt_k][cnt_j][cnt_i]);
-            // }
-            // }
             SubByte(state);
             ShiftRow(state);
             MixColumns(state);
@@ -1020,17 +923,8 @@ void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256], unsigned char LUT_Rd1_plu
             
         }
         state_copy(state, state_temp);
+        reset_count(count);
     }
-    reset_count(count);
-    //     printf("\n");
-    // for(cnt_i = 0 ; cnt_i < 1 ; cnt_i ++)
-    // {
-    //     for(cnt_j = 0 ; cnt_j < 4 ; cnt_j ++)
-    //     {
-    //         printf("%02x ",LUT_FL[0][cnt_j][cnt_i]);
-    //     }
-    //     printf("\n");
-    // }
 }
 void AES_encrypt_FACE_EX(unsigned char *in, unsigned char LUT_Rd1[][256], unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key) //AES encryption of FACE mode
 {
@@ -1040,25 +934,11 @@ void AES_encrypt_FACE_EX(unsigned char *in, unsigned char LUT_Rd1[][256], unsign
 
     for (cnt_i = 0; cnt_i < 4; cnt_i++)
     {
-        state[cnt_i] = LUT_FL[3][cnt_i][LUT_Rd1[0][in[15]]];
-        state[cnt_i + 4] = LUT_FL[0][cnt_i][LUT_Rd1[1][in[15]]];
+        state[cnt_i] = LUT_FL[3][cnt_i][LUT_Rd1[0][in[15]] ];
+        state[cnt_i + 4] = LUT_FL[0][cnt_i][LUT_Rd1[3][in[15]]];
         state[cnt_i + 8] = LUT_FL[1][cnt_i][LUT_Rd1[2][in[15]]];
-        state[cnt_i + 12] = LUT_FL[2][cnt_i][LUT_Rd1[3][in[15]]];
+        state[cnt_i + 12] = LUT_FL[2][cnt_i][LUT_Rd1[1][in[15]]];
     }
-    
-    // printf("\n");
-    // for(cnt_i = 0 ; cnt_i < 16 ; cnt_i ++)
-    // {
-       
-    //         printf("%02x ",state[cnt_i]);
-    // }
-    // printf("\n");
-    // for(cnt_i = 0 ; cnt_i < 4 ; cnt_i ++)
-    // {
-       
-    //         printf("%02x ",LUT_FL[2][cnt_i][in[15]]);
-    // }
-
     ShiftRow(state);
     MixColumns(state);
     AddRoundKey(state, key, &round);
@@ -1085,8 +965,8 @@ void CRYPTO_ctr128_encrypt_FACE_Ex(unsigned char *in, unsigned char *out, unsign
 {
     int cnt_i, cnt_j;
     int paddingcnt = len % 16;
-    unsigned char PT[BLOCKSIZE][16] = {0x00};
-    unsigned char CT[BLOCKSIZE][16] = {0x00};
+    unsigned char PT[BLOCKSIZE][16] = {{0x00}};
+    unsigned char CT[BLOCKSIZE][16] = {{0x00}};
     unsigned char iparray[16];
     unsigned char oparray[16];
     AES_KEY USER_KEY;
