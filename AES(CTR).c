@@ -883,7 +883,7 @@ void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, uns
 }
 
 void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256], unsigned char LUT_Rd1_plus[12], unsigned char *userkey, unsigned char *count) //! LUK Table of FACE_Light
-{
+{//Extended 테이블을 구현하는 테이블이다.
     unsigned char state[16] = {0x00};
     unsigned char state_temp[16] = {0x00};
     int round = 0;
@@ -927,7 +927,7 @@ void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256], unsigned char LUT_Rd1_plu
     }
 }
 void AES_encrypt_FACE_EX(unsigned char *in, unsigned char LUT_Rd1[][256], unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key) //AES encryption of FACE mode
-{
+{ //EXtended FACE는 3라운드까지 최적화를 시킴으로 round의 변화를 주었다.
     unsigned char state[4 * Nb];
     int cnt_i;
     int round = 3;
@@ -950,7 +950,7 @@ void AES_encrypt_FACE_EX(unsigned char *in, unsigned char LUT_Rd1[][256], unsign
         MixColumns(state);
         AddRoundKey(state, key, &round);
     }
-
+    
     SubByte(state);
     ShiftRow(state);
     AddRoundKey(state, key, &round);
@@ -962,7 +962,7 @@ void AES_encrypt_FACE_EX(unsigned char *in, unsigned char LUT_Rd1[][256], unsign
 }
 
 void CRYPTO_ctr128_encrypt_FACE_Ex(unsigned char *in, unsigned char *out, unsigned char LUT_Rd1[][256], unsigned char LUT_FL[4][4][256], size_t len, void *masterkey, unsigned char *count) //AES CTR Mode of FACE Ver
-{
+{//Extended FACE에 구현이며 세부적인 것은 안의 AES 함수만 변동되었다.
     int cnt_i, cnt_j;
     int paddingcnt = len % 16;
     unsigned char PT[BLOCKSIZE][16] = {{0x00}};
