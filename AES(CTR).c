@@ -895,7 +895,7 @@ void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256], unsigned char LUT_Rd1_plu
 
     for (cnt_i = 0; cnt_i < 12; cnt_i++)
     {
-        state_temp[cnt_i + 4] = LUT_Rd1_plus[cnt_i];
+        state_temp[cnt_i + 4] = LUT_Rd1_plus[cnt_i];//1라운드에서의 결과값을 가져온다
     }
     state_copy(state, state_temp);
 
@@ -903,7 +903,7 @@ void Make_LUT_Face_Ex(unsigned char LUT_FL[4][4][256], unsigned char LUT_Rd1_plu
     {
         for (cnt_i = 0; cnt_i < 256; cnt_i++)
         {
-            round = 2;
+            round = 2;//2라운드에서 Addroundkey를 해주고 난 후 결과를 이용할것
             SubByte(state);
             ShiftRow(state);
             MixColumns(state);
