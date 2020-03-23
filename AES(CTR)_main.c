@@ -12,7 +12,7 @@ unsigned char LUT_Rd2_plus[4][4][256] = {{{0x00}}};
 unsigned char LUT_FL[4][4][256] = {{{0x00}}};
 
 //! CTR TEST
-#if 0
+#if 1
 int main()
 {
     int cnt_i;
@@ -151,7 +151,7 @@ int main()
 #endif
 
 //!성능테스트 Make Table
-#if 1
+#if 0
 int main()
 {
     unsigned long long cycles1, cycles2, cycles3, cycles4;
