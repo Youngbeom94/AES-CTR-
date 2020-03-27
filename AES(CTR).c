@@ -209,6 +209,8 @@ void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
     int cnt_i;
     int round = 0;
 
+    //* unsigned long long cycles1, cycles2, cycles3, cycles4;
+    //* unsigned long long totalcycles1 = 0;
     for (cnt_i = 0; cnt_i < 4 * Nb; cnt_i++)
     {
         state[cnt_i] = in[cnt_i];
@@ -216,6 +218,7 @@ void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
 
     AddRoundKey(state, key, &round); //Round 0때는 오직 AddRoundkey 함수 연산만 있다
 
+    //* cycles1 = cpucycles();
     for (cnt_i = 1; cnt_i < AES_MAXNR; cnt_i++)
     {
         SubByte(state);
@@ -223,6 +226,9 @@ void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
         MixColumns(state);
         AddRoundKey(state, key, &round);
     }
+    //* cycles2 = cpucycles();
+    //* totalcycles1 += cycles2 - cycles1;
+    //* printf("AES ENC %10lld\n", totalcycles1);
 
     SubByte(state);
     ShiftRow(state);
@@ -635,6 +641,9 @@ void AES_encrypt_FACE(unsigned char *in, unsigned char LUT_Rd2[4][4][256], unsig
     int cnt_i;
     int round = 3;
 
+    //* unsigned long long cycles1, cycles2, cycles3, cycles4;
+    //* unsigned long long totalcycles1 = 0;
+
     for (cnt_i = 0; cnt_i < 4; cnt_i++)
     {
         state[4 * cnt_i] = LUT_Rd2[cnt_i][0][in[15]];
@@ -643,6 +652,7 @@ void AES_encrypt_FACE(unsigned char *in, unsigned char LUT_Rd2[4][4][256], unsig
         state[4 * cnt_i + 3] = LUT_Rd2[cnt_i][3][in[15]];
     }
 
+    //* cycles1 = cpucycles();
     for (cnt_i = 3; cnt_i < AES_MAXNR; cnt_i++)
     {
         SubByte(state);
@@ -650,6 +660,9 @@ void AES_encrypt_FACE(unsigned char *in, unsigned char LUT_Rd2[4][4][256], unsig
         MixColumns(state);
         AddRoundKey(state, key, &round);
     }
+    //* cycles2 = cpucycles();
+    //* totalcycles1 += cycles2 - cycles1;
+    //* printf("AES FAcE ENC %10lld\n", totalcycles1);
 
     SubByte(state);
     ShiftRow(state);

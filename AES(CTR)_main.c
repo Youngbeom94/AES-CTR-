@@ -12,7 +12,7 @@ unsigned char LUT_Rd2_plus[4][4][256] = {{{0x00}}};
 unsigned char LUT_FL[4][4][256] = {{{0x00}}};
 
 //! CTR TEST
-#if 1
+#if 0
 int main()
 {
     int cnt_i;
@@ -97,22 +97,22 @@ int main()
 
 
     int time = 10000;
-    for (cnt_i = 0; cnt_i < time; cnt_i++)
-    {
+    // for (cnt_i = 0; cnt_i < time; cnt_i++)
+    // {
 
-        //! Encrypt Origin ver
-        cycles1 = cpucycles();
-        CRYPTO_ctr128_encrypt(in, out, BLOCKSIZE * 16, userkey, count);
-        cycles2 = cpucycles();
+    //     //! Encrypt Origin ver
+    //     cycles1 = cpucycles();
+    //     CRYPTO_ctr128_encrypt(in, out, BLOCKSIZE * 16, userkey, count);
+    //     cycles2 = cpucycles();
 
-        totalcycles1 += cycles2 - cycles1;
-    }
-    printf("cpu cycles of AES(CTR) ENC %10lld\n", totalcycles1 / time);
+    //     totalcycles1 += cycles2 - cycles1;
+    // }
+    // printf("cpu cycles of AES(CTR) ENC %10lld\n", totalcycles1 / time);
 
+    //! Encrypt FACE ver
     // totalcycles1 = 0x00;
     // for (cnt_i = 0; cnt_i < time; cnt_i++)
     // {
-    //     //! Encrypt FACE ver
 
     //     cycles1 = cpucycles();
     //     CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
@@ -122,10 +122,11 @@ int main()
     // }
     // printf("cpu cycles of AES_FACE ENC %10lld\n", totalcycles1 / time);
 
+
+    //     //! Encrypt FACE_Light ver
     // totalcycles1 = 0x00;
     // for (cnt_i = 0; cnt_i < time; cnt_i++)
     // {
-    //     //! Encrypt FACE_Light ver
     //     cycles1 = cpucycles();
     //     CRYPTO_ctr128_encrypt_FACE_Light(in,out,LUT_FL,BLOCKSIZE * 16,userkey,count);
     //     cycles2 = cpucycles();
@@ -134,24 +135,24 @@ int main()
     // }
     // printf("cpu cycles of AES_FcLt ENC %10lld\n", totalcycles1 / time);
 
-    totalcycles1 = 0x00;
-    for (cnt_i = 0; cnt_i < time; cnt_i++)
-    {
-         //! Encrypt FACE_Extended ver
-        cycles3 = cpucycles();
-        CRYPTO_ctr128_encrypt_FACE_Ex(in, out, LUT_Rd1,LUT_FL, BLOCKSIZE * 16, userkey, count);
-        cycles4 = cpucycles();
+        //  ! Encrypt FACE_Extended ver
+    // totalcycles1 = 0x00;
+    // for (cnt_i = 0; cnt_i < time; cnt_i++)
+    // {
+    //     cycles3 = cpucycles();
+    //     CRYPTO_ctr128_encrypt_FACE_Ex(in, out, LUT_Rd1,LUT_FL, BLOCKSIZE * 16, userkey, count);
+    //     cycles4 = cpucycles();
 
-        totalcycles1 += cycles4 - cycles3;
-    }
-    printf("cpu cycles of AES_FaEx ENC %10lld\n", totalcycles1 / time);
+    //     totalcycles1 += cycles4 - cycles3;
+    // }
+    // printf("cpu cycles of AES_FaEx ENC %10lld\n", totalcycles1 / time);
 
     return 0;
 }
 #endif
 
 //!성능테스트 Make Table
-#if 0
+#if 1
 int main()
 {
     unsigned long long cycles1, cycles2, cycles3, cycles4;
