@@ -12,7 +12,7 @@
 #define xtime(x) ((x << 1) ^ (((x >> 7) & 1) * 0x1b))
 #define Nb 4 //Number of colmns
 #define Nk 4 //Number of 32-bit words comprising the Cipher Key //happy
-#define BLOCKSIZE  1//!CTR Block size
+#define BLOCKSIZE  256//!CTR Block size
 
 #if Nk == 4
 #define AES_MAXNR 10 //10 round
@@ -53,7 +53,13 @@ void AddRoundKey_For_FL(unsigned char *state,AES_KEY *key, int *round);//Addroun
 void Count_Addition_FACE_Light(unsigned char *count,int cnt_k);//AES -CTR_FACE-LIGHT 모드에서 Count를 1씩 증가해 주는 함수
 void Count_Add_FACE_Light(unsigned char *count);//AES -CTR_FACE-LIGHT 모드에서 Count를 1씩 증가해 주는 함수
 void state_copy(unsigned char *dst , unsigned char *src);
+
+#if BLOCKSIZE <= 256
 void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256],unsigned char *userkey,unsigned char *count);//! LUK Table of FACE_Light
+#else
+void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256],unsigned char *userkey,unsigned char *count);//! LUK Table of FACE_Light
+#endif
+
 void AES_encrypt_FACE_Light(unsigned char *in,unsigned char LUT_FL[4][4][256], unsigned char *out, AES_KEY *key);//AES encryption of FACE mode
 void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, unsigned char LUT_FL[4][4][256],size_t len, void *masterkey, unsigned char *count);//AES CTR Mode of FACE Ver
 
@@ -67,6 +73,9 @@ void CRYPTO_ctr128_encrypt_FACE_Ex(unsigned char *in, unsigned char *out, unsign
 
 
 
+
+//!clock test
 unsigned long long cpucycles();// cpucycle measuring instrument
+
 
 #endif

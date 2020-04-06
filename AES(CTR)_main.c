@@ -5,7 +5,7 @@ AES_KEY *key = &KEY;
 unsigned char in[BLOCKSIZE * 16] = {0x00};
 unsigned char userkey[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 unsigned char out[BLOCKSIZE * 16] = {0x00};
-unsigned char count[16] = {0x00,0x00,0x00,0x00};
+unsigned char count[16] = {0x00, 0x00, 0x00, 0x00};
 unsigned char LUT_Rd1[4][256] = {{0x00}};
 unsigned char LUT_Rd1_plus[12] = {0x00};
 unsigned char LUT_Rd2_plus[4][4][256] = {{{0x00}}};
@@ -31,18 +31,18 @@ int main()
         printf("%02x ", userkey[cnt_i]);
     }
 
-    //! Encrypt
-    CRYPTO_ctr128_encrypt(in, out, BLOCKSIZE * 16, userkey, count);
-    printf("\n\nOrign ver CTR Encrypt txt\n");
-    for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
-    {
-        if ((cnt_i % 16 == 0) && (cnt_i != 0))
-            printf("\n");
-        printf("%02x ", out[cnt_i]);
-    }
+    // // //! Encrypt
+    // CRYPTO_ctr128_encrypt(in, out, BLOCKSIZE * 16, userkey, count);
+    // printf("\n\nOrign ver CTR Encrypt txt\n");
+    // for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
+    // {
+    //     if ((cnt_i % 16 == 0) && (cnt_i != 0))
+    //         printf("\n");
+    //     printf("%02x ", out[cnt_i]);
+    // }
 
-    // //! Encrypt of FACE
-    // Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
+    // // //! Encrypt of FACE
+    // Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);g
     // Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count);
     // CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
 
@@ -55,87 +55,85 @@ int main()
     // }
 
     //! Encrypt of FACE_Light
-    // Make_LUT_Face_Light(LUT_FL,userkey,count);
-    // CRYPTO_ctr128_encrypt_FACE_Light(in,out,LUT_FL,BLOCKSIZE * 16,userkey,count);
-    // printf("\n\nFACE_Light ver CTR Encrypt txt\n");
-    // for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
-    // {
-    //     if ((cnt_i % 16 == 0) && (cnt_i != 0))
-    //         printf("\n");
-    //     printf("%02x ", out[cnt_i]);
-    // }
-
-    // //! Encrypt of FACE_Extended
-    Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
-    Make_LUT_Face_Ex(LUT_FL,LUT_Rd1_plus,userkey,count);
-    CRYPTO_ctr128_encrypt_FACE_Ex(in, out, LUT_Rd1,LUT_FL, BLOCKSIZE * 16, userkey, count);
-
-    printf("\n\nFACE - Ex Encrypt txt\n");
+    Make_LUT_Face_Light(LUT_FL,userkey,count);
+    CRYPTO_ctr128_encrypt_FACE_Light(in,out,LUT_FL,BLOCKSIZE * 16,userkey,count);
+    printf("\n\nFACE_Light ver CTR Encrypt txt\n");
     for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
     {
-        if((cnt_i % 16 == 0) && (cnt_i != 0))
+        if ((cnt_i % 16 == 0) && (cnt_i != 0))
             printf("\n");
         printf("%02x ", out[cnt_i]);
     }
+
+    // //! Encrypt of FACE_Extended
+    // Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);
+    // Make_LUT_Face_Ex(LUT_FL,LUT_Rd1_plus,userkey,count);
+    // CRYPTO_ctr128_encrypt_FACE_Ex(in, out, LUT_Rd1,LUT_FL, BLOCKSIZE * 16, userkey, count);
+
+    // printf("\n\nFACE - Ex Encrypt txt\n");
+    // for (cnt_i = 0; cnt_i < BLOCKSIZE * 16; cnt_i++)
+    // {
+    //     if((cnt_i % 16 == 0) && (cnt_i != 0))
+    //         printf("\n");
+    //     printf("%02x ", out[cnt_i]);
+    // }
 
     return 0;
 }
 #endif
 
 //!성능테스트 CTR ver vs FACE CTR ver
-#if 0
+#if 1
 int main()
 {
     unsigned long long cycles1, cycles2, cycles3, cycles4;
     unsigned long long totalcycles1 = 0;
     unsigned long long totalcycles2 = 0;
     int cnt_i = 0;
-    Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);//! 1KB
-    Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count);//! 4KB
-    Make_LUT_Face_Light(LUT_FL,userkey,count);
-    Make_LUT_Face_Ex(LUT_FL,LUT_Rd1_plus,userkey,count);
-
+    Make_LUT_Face_Ex(LUT_FL, LUT_Rd1_plus, userkey, count);
 
     int time = 10000;
-    // for (cnt_i = 0; cnt_i < time; cnt_i++)
-    // {
 
     //     //! Encrypt Origin ver
-    //     cycles1 = cpucycles();
-    //     CRYPTO_ctr128_encrypt(in, out, BLOCKSIZE * 16, userkey, count);
-    //     cycles2 = cpucycles();
+    for (cnt_i = 0; cnt_i < time; cnt_i++)
+    {
+        cycles1 = cpucycles();
+        CRYPTO_ctr128_encrypt(in, out, BLOCKSIZE * 16, userkey, count);
+        cycles2 = cpucycles();
 
-    //     totalcycles1 += cycles2 - cycles1;
-    // }
-    // printf("cpu cycles of AES(CTR) ENC %10lld\n", totalcycles1 / time);
+        totalcycles1 += cycles2 - cycles1;
+    }
+    printf("cpu cycles of AES(CTR) ENC %10lld\n", totalcycles1 / time);
 
-    //! Encrypt FACE ver
-    // totalcycles1 = 0x00;
-    // for (cnt_i = 0; cnt_i < time; cnt_i++)
-    // {
+    // //! Encrypt FACE ver
+    totalcycles1 = 0x00;
+    for (cnt_i = 0; cnt_i < time; cnt_i++)
+    {
 
-    //     cycles1 = cpucycles();
-    //     CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
-    //     cycles2 = cpucycles();
+        cycles1 = cpucycles();
+        Make_LUTRd1(LUT_Rd1, LUT_Rd1_plus, userkey, count);               //! 1KB
+        Make_LUTRd2(LUT_Rd1, LUT_Rd1_plus, LUT_Rd2_plus, userkey, count); //! 4KB
+        CRYPTO_ctr128_encrypt_FACE(in, out, LUT_Rd2_plus, BLOCKSIZE * 16, userkey, count);
+        cycles2 = cpucycles();
 
-    //     totalcycles1 += cycles2 - cycles1;
-    // }
-    // printf("cpu cycles of AES_FACE ENC %10lld\n", totalcycles1 / time);
-
+        totalcycles1 += cycles2 - cycles1;
+    }
+    printf("cpu cycles of AES_FACE ENC %10lld\n", totalcycles1 / time);
 
     //     //! Encrypt FACE_Light ver
-    // totalcycles1 = 0x00;
-    // for (cnt_i = 0; cnt_i < time; cnt_i++)
-    // {
-    //     cycles1 = cpucycles();
-    //     CRYPTO_ctr128_encrypt_FACE_Light(in,out,LUT_FL,BLOCKSIZE * 16,userkey,count);
-    //     cycles2 = cpucycles();
+    totalcycles1 = 0x00;
+    for (cnt_i = 0; cnt_i < time; cnt_i++)
+    {
+        cycles1 = cpucycles();
+        Make_LUT_Face_Light(LUT_FL, userkey, count);
+        CRYPTO_ctr128_encrypt_FACE_Light(in, out, LUT_FL, BLOCKSIZE * 16, userkey, count);
+        cycles2 = cpucycles();
 
-    //     totalcycles1 += cycles2 - cycles1;
-    // }
-    // printf("cpu cycles of AES_FcLt ENC %10lld\n", totalcycles1 / time);
+        totalcycles1 += cycles2 - cycles1;
+    }
+    printf("cpu cycles of AES_FcLt ENC %10lld\n", totalcycles1 / time);
 
-        //  ! Encrypt FACE_Extended ver
+    //  ! Encrypt FACE_Extended ver
     // totalcycles1 = 0x00;
     // for (cnt_i = 0; cnt_i < time; cnt_i++)
     // {
@@ -152,7 +150,7 @@ int main()
 #endif
 
 //!성능테스트 Make Table
-#if 1
+#if 0
 int main()
 {
     unsigned long long cycles1, cycles2, cycles3, cycles4;

@@ -23,6 +23,7 @@ unsigned long long cpucycles()
 {
     return __rdtsc();
 }
+
 void reset_count(unsigned char *count)
 {
     int cnt_i = 0;
@@ -387,17 +388,17 @@ void CRYPTO_ctr128_encrypt(unsigned char *in, unsigned char *out, size_t len, vo
         }
     }
 
-    if (paddingcnt != 0) // 패딩 함수. Padding cnt 만큼 뺴주는 방식을 취한다.
-    {
-        for (cnt_j = 0; cnt_j < paddingcnt; cnt_j++)
-        {
-            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
-        }
-        for (cnt_j = paddingcnt; cnt_j < 16; cnt_j++)
-        {
-            PT[BLOCKSIZE - 1][cnt_j] = (0x10 - paddingcnt);
-        }
-    }
+    // if (paddingcnt != 0) //! 패딩 함수. Padding cnt 만큼 뺴주는 방식을 취한다.
+    // {
+    //     for (cnt_j = 0; cnt_j < paddingcnt; cnt_j++)
+    //     {
+    //         PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
+    //     }
+    //     for (cnt_j = paddingcnt; cnt_j < 16; cnt_j++)
+    //     {
+    //         PT[BLOCKSIZE - 1][cnt_j] = (0x10 - paddingcnt);
+    //     }
+    // }
 
     for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++) //각각의 count마다 1더하기 해주고, 암호화 시킨다음에 PT와 XoR 해준다. CORE
     {
@@ -768,7 +769,7 @@ void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256], unsigned char *userkey
 
     for (cnt_k = 0; cnt_k < 4; cnt_k++)
     {
-        for (cnt_i = 0; cnt_i < 256; cnt_i++)
+        for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++)  //! perhaps 256
         {
             round = 0x00;
             AddRoundKey(state, key, &round);
@@ -840,6 +841,7 @@ void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, uns
     AES_KEY USER_KEY;
     AES_KEY *key = &USER_KEY;
 
+    
     key->rounds = AES_set_encrypt_key(masterkey, AES_KEY_BIT, key); //!
     reset_count(count);
 
@@ -858,17 +860,17 @@ void CRYPTO_ctr128_encrypt_FACE_Light(unsigned char *in, unsigned char *out, uns
         }
     }
 
-    if (paddingcnt != 0) // 패딩 함수.
-    {
-        for (cnt_j = 0; cnt_j < paddingcnt; cnt_j++)
-        {
-            PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
-        }
-        for (cnt_j = paddingcnt; cnt_j < 16; cnt_j++)
-        {
-            PT[BLOCKSIZE - 1][cnt_j] = (0x10 - paddingcnt);
-        }
-    }
+    // if (paddingcnt != 0) //! 패딩 함수.
+    // {
+    //     for (cnt_j = 0; cnt_j < paddingcnt; cnt_j++)
+    //     {
+    //         PT[BLOCKSIZE - 1][cnt_j] = in[(BLOCKSIZE - 1) * 16 + cnt_j];
+    //     }
+    //     for (cnt_j = paddingcnt; cnt_j < 16; cnt_j++)
+    //     {
+    //         PT[BLOCKSIZE - 1][cnt_j] = (0x10 - paddingcnt);
+    //     }
+    // }
 
     for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++) //각각의 count마다 1더하기 해주고, 암호화 시킨다음에 PT와 XoR 해준다. CORE
     {
@@ -945,7 +947,7 @@ void AES_encrypt_FACE_EX(unsigned char *in, unsigned char LUT_Rd1[][256], unsign
     int cnt_i;
     int round = 3;
 
-    for (cnt_i = 0; cnt_i < 4; cnt_i++)
+    for (cnt_i = 0; cnt_i < 1; cnt_i++)
     {
         state[cnt_i] = LUT_FL[3][cnt_i][LUT_Rd1[0][in[15]] ];
         state[cnt_i + 4] = LUT_FL[0][cnt_i][LUT_Rd1[3][in[15]]];
@@ -975,7 +977,7 @@ void AES_encrypt_FACE_EX(unsigned char *in, unsigned char LUT_Rd1[][256], unsign
 }
 
 void CRYPTO_ctr128_encrypt_FACE_Ex(unsigned char *in, unsigned char *out, unsigned char LUT_Rd1[][256], unsigned char LUT_FL[4][4][256], size_t len, void *masterkey, unsigned char *count) //AES CTR Mode of FACE Ver
-{//Extended FACE에 구현이며 세부적인 것은 안의 AES 함수만 변동되었다.
+{//Extended FACE에 구현이며 세부적인 것은 안의 AES 함수만 변동되었다. 
     int cnt_i, cnt_j;
     int paddingcnt = len % 16;
     unsigned char PT[BLOCKSIZE][16] = {{0x00}};
