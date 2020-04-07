@@ -74,6 +74,10 @@ void CRYPTO_ctr128_encrypt_FACE_Ex(unsigned char *in, unsigned char *out, unsign
 
 
 
+//! test mixcolumn LUK
+void make_Sboxtable(unsigned char *sbox2);
+void make_Sboxtable2(unsigned char *sbox3);
+
 //!clock test
 unsigned long long cpucycles();// cpucycle measuring instrument
 
