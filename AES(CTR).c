@@ -285,8 +285,8 @@ void AES_encrypt(unsigned char *in, unsigned char *out, AES_KEY *key)
     {
         SubByte(state);
         ShiftRow(state);
-        // MixColumns(state);
-        MixColumns_Xtime_Optimize(state);
+        MixColumns(state);
+        // MixColumns_Xtime_Optimize(state);
         AddRoundKey(state, key, &round);
     }
     //* cycles2 = cpucycles();
@@ -831,7 +831,7 @@ void Make_LUT_Face_Light(unsigned char LUT_FL[4][4][256], unsigned char *userkey
 
     for (cnt_k = 0; cnt_k < 4; cnt_k++)
     {
-        for (cnt_i = 0; cnt_i < BLOCKSIZE; cnt_i++)  //! perhaps 256
+        for (cnt_i = 0; cnt_i < 256; cnt_i++)  //! perhaps 256
         {
             round = 0x00;
             AddRoundKey(state, key, &round);
@@ -1114,15 +1114,14 @@ void make_Sboxtable(unsigned char *sbox2)
         sbox2[cnt_i] = xtime(cnt_i);
     }
 
+    // for(cnt_i = 0 ; cnt_i <256 ; cnt_i ++)
+    // {
+    //     if(cnt_i % 16 == 0)
+    //         printf("\n");
 
-    for(cnt_i = 0 ; cnt_i <256 ; cnt_i ++)
-    {
-        if(cnt_i % 16 == 0)
-            printf("\n");
+    //     printf("0x%02x, ",sbox2[cnt_i]);
 
-        printf("0x%02x, ",sbox2[cnt_i]);
-
-    }
+    // }
 }
 void make_Sboxtable2(unsigned char *sbox3)
 {
@@ -1133,14 +1132,12 @@ void make_Sboxtable2(unsigned char *sbox3)
         sbox3[cnt_i] = xtime(cnt_i);
         sbox3[cnt_i] ^= cnt_i;
     }
+    // for(cnt_i = 0 ; cnt_i <256 ; cnt_i ++)
+    // {
+    //     if(cnt_i % 16 == 0)
+    //         printf("\n");
 
+    //     printf("0x%02x, ",sbox3[cnt_i]);
 
-    for(cnt_i = 0 ; cnt_i <256 ; cnt_i ++)
-    {
-        if(cnt_i % 16 == 0)
-            printf("\n");
-
-        printf("0x%02x, ",sbox3[cnt_i]);
-
-    }
+    // }
 }
